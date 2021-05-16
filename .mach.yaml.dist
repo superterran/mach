@@ -1,0 +1,4 @@
+---
+docker_registry: superterran/mach
+docker_user: <docker hub user>
+docker_pass: <docker hub password or token>
