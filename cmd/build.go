@@ -24,6 +24,7 @@ package cmd
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"path/filepath"
@@ -34,6 +35,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type ErrorLine struct {
+	Error       string      `json:"error"`
+	ErrorDetail ErrorDetail `json:"errorDetail"`
+}
+
+type ErrorDetail struct {
+	Message string `json:"message"`
+}
+
 // buildCmd represents the build command
 var buildCmd = &cobra.Command{
 	Use:   "build",
@@ -42,40 +52,54 @@ var buildCmd = &cobra.Command{
 	and use this to populate a docker registry. `,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		ctx := context.Background()
-		cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-		if err != nil {
-			panic(err)
-		}
-
 		matches, _ := filepath.Glob("./images/**/Dockerfile*")
 		for _, match := range matches {
 
-			if err != nil {
-				log.Fatal(err)
-			}
+			buildImage(match)
 
-			tar, err := archive.TarWithOptions(match, &archive.TarOptions{})
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			opts := types.ImageBuildOptions{
-				Dockerfile: "Dockerfile",
-				Remove:     true,
-			}
-
-			res, err := cli.ImageBuild(ctx, tar, opts)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			scanner := bufio.NewScanner(res.Body)
-			for scanner.Scan() {
-				fmt.Println(scanner.Text())
-			}
 		}
 	},
+}
+
+func buildImage(filename string) {
+
+	ctx := context.Background()
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		panic(err)
+	}
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	tar, err := archive.TarWithOptions(filename, &archive.TarOptions{})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	opts := types.ImageBuildOptions{
+		Dockerfile: "Dockerfile",
+		Remove:     true,
+	}
+
+	res, err := cli.ImageBuild(ctx, tar, opts)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	scanner := bufio.NewScanner(res.Body)
+	for scanner.Scan() {
+
+		var lastLine = scanner.Text()
+		fmt.Println(scanner.Text())
+
+		errLine := &ErrorLine{}
+		json.Unmarshal([]byte(lastLine), errLine)
+		if errLine.Error != "" {
+			log.Fatal(errLine.Error)
+		}
+	}
 }
 
 func init() {
