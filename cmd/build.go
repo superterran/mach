@@ -24,10 +24,14 @@ package cmd
 import (
 	"bufio"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
+	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -60,13 +64,13 @@ var buildCmd = &cobra.Command{
 		matches, _ := filepath.Glob(viper.GetString("buildImageDirname") + "/**/Dockerfile*")
 		for _, match := range matches {
 
-			buildImage(match)
+			buildImage(match, cmd)
 
 		}
 	},
 }
 
-func buildImage(filename string) {
+func buildImage(filename string, cmd *cobra.Command) {
 
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
@@ -83,9 +87,12 @@ func buildImage(filename string) {
 		log.Fatal(err)
 	}
 
+	var mach_tag = viper.GetString("docker_registry") + ":" + filepath.Base(filepath.Dir(filename))
+
 	opts := types.ImageBuildOptions{
 		Dockerfile: "Dockerfile",
 		Remove:     true,
+		Tags:       []string{mach_tag},
 	}
 
 	res, err := cli.ImageBuild(ctx, tar, opts)
@@ -104,6 +111,49 @@ func buildImage(filename string) {
 		if errLine.Error != "" {
 			log.Fatal(errLine.Error)
 		}
+	}
+
+	fnopush, _ := cmd.Flags().GetBool("no-push")
+	if !fnopush {
+		pushImage(mach_tag)
+	}
+}
+
+func pushImage(mach_tag string) {
+
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("attempting to push image " + mach_tag)
+
+	var authConfig = types.AuthConfig{
+		Username:      viper.GetString("docker_user"),
+		Password:      viper.GetString("docker_pass"),
+		ServerAddress: viper.GetString("docker_host"),
+	}
+	authConfigBytes, _ := json.Marshal(authConfig)
+	authConfigEncoded := base64.URLEncoding.EncodeToString(authConfigBytes)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*120)
+	defer cancel()
+
+	tag := mach_tag
+
+	opts := types.ImagePushOptions{RegistryAuth: authConfigEncoded}
+	rd, err := cli.ImagePush(ctx, tag, opts)
+
+	io.Copy(os.Stdout, rd)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer rd.Close()
+
+	if rd != nil {
+		log.Fatal(rd)
 	}
 }
 
