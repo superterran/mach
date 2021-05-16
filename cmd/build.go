@@ -49,7 +49,6 @@ type ErrorDetail struct {
 	Message string `json:"message"`
 }
 
-// buildCmd represents the build command
 var buildCmd = &cobra.Command{
 	Use:   "build",
 	Short: "Builds a directory of docker images and pushes them to a registry",
@@ -160,14 +159,6 @@ func pushImage(mach_tag string) {
 func init() {
 	rootCmd.AddCommand(buildCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// buildCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
 	buildCmd.Flags().BoolP("no-push", "n", false, "Do not push to registry")
 
 	viper.SetDefault("buildImageDirname", "./images")
