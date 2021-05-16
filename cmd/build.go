@@ -31,6 +31,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -50,21 +51,37 @@ type ErrorDetail struct {
 }
 
 var buildCmd = &cobra.Command{
-	Use:   "build",
+	Use:   "build [docker-image[:tag]]",
 	Short: "Builds a directory of docker images and pushes them to a registry",
 	Long: `This allows you to maintain a directory of docker images, with templating,
-	and use this to populate a docker registry. `,
+and use this to populate a docker registry. `,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		fmt.Println(viper.Get("example"))
+		if len(args) < 1 {
+			fmt.Println("building all")
+			matches, _ := filepath.Glob(viper.GetString("buildImageDirname") + "/**/Dockerfile*")
+			for _, match := range matches {
+				buildImage(match, cmd)
+			}
 
-		fmt.Println(viper.Get("registry"))
+		} else {
 
-		matches, _ := filepath.Glob(viper.GetString("buildImageDirname") + "/**/Dockerfile*")
-		for _, match := range matches {
+			fmt.Println("building args that match")
+			for _, arg := range args {
 
-			buildImage(match, cmd)
+				var image string = arg
+				var variant string
 
+				if strings.Contains(arg, ":") {
+					image = strings.Split(arg, ":")[0]
+					variant = "-" + strings.Split(arg, ":")[1]
+				}
+
+				matches, _ := filepath.Glob(viper.GetString("buildImageDirname") + "/" + image + "/Dockerfile" + variant + "*")
+				for _, match := range matches {
+					buildImage(match, cmd)
+				}
+			}
 		}
 	},
 }
@@ -86,10 +103,18 @@ func buildImage(filename string, cmd *cobra.Command) {
 		log.Fatal(err)
 	}
 
-	var mach_tag = viper.GetString("docker_registry") + ":" + filepath.Base(filepath.Dir(filename))
+	var variant string = ""
+
+	if strings.Contains(filepath.Base(filename), "-") {
+		variant = "-" + strings.Split(filepath.Base(filename), "-")[1]
+	}
+
+	var mach_tag = viper.GetString("docker_registry") + ":" + filepath.Base(filepath.Dir(filename)) + variant
+
+	fmt.Println("Building image with tag " + mach_tag)
 
 	opts := types.ImageBuildOptions{
-		Dockerfile: "Dockerfile",
+		Dockerfile: filepath.Base(filename),
 		Remove:     true,
 		Tags:       []string{mach_tag},
 	}
@@ -149,11 +174,12 @@ func pushImage(mach_tag string) {
 		log.Fatal(err)
 	}
 
-	defer rd.Close()
-
-	if rd != nil {
+	if rd == nil {
 		log.Fatal(rd)
 	}
+
+	defer rd.Close()
+
 }
 
 func init() {
