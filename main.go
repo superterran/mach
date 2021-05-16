@@ -21,8 +21,16 @@ THE SOFTWARE.
 */
 package main
 
-import "github.com/superterran/mach/cmd"
+import (
+	"github.com/spf13/viper"
+	"github.com/superterran/mach/cmd"
+)
 
 func main() {
+
+	viper.AddConfigPath(".")
+	viper.SetEnvPrefix("mach")
+	viper.AutomaticEnv()
+
 	cmd.Execute()
 }

@@ -33,6 +33,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 type ErrorLine struct {
@@ -52,7 +53,11 @@ var buildCmd = &cobra.Command{
 	and use this to populate a docker registry. `,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		matches, _ := filepath.Glob("./images/**/Dockerfile*")
+		fmt.Println(viper.Get("example"))
+
+		fmt.Println(viper.Get("registry"))
+
+		matches, _ := filepath.Glob(viper.GetString("buildImageDirname") + "/**/Dockerfile*")
 		for _, match := range matches {
 
 			buildImage(match)
@@ -114,5 +119,7 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	buildCmd.Flags().BoolP("no-push", "n", false, "Do not push to registry")
+
+	viper.SetDefault("buildImageDirname", "./images")
 
 }
