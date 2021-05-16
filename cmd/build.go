@@ -22,8 +22,15 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"bufio"
+	"context"
 	"fmt"
+	"log"
+	"path/filepath"
 
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/archive"
 	"github.com/spf13/cobra"
 )
 
@@ -34,7 +41,40 @@ var buildCmd = &cobra.Command{
 	Long: `This allows you to maintain a directory of docker images, with templating,
 	and use this to populate a docker registry. `,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("build called")
+
+		ctx := context.Background()
+		cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+		if err != nil {
+			panic(err)
+		}
+
+		matches, _ := filepath.Glob("./images/**/Dockerfile*")
+		for _, match := range matches {
+
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			tar, err := archive.TarWithOptions(match, &archive.TarOptions{})
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			opts := types.ImageBuildOptions{
+				Dockerfile: "Dockerfile",
+				Remove:     true,
+			}
+
+			res, err := cli.ImageBuild(ctx, tar, opts)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			scanner := bufio.NewScanner(res.Body)
+			for scanner.Scan() {
+				fmt.Println(scanner.Text())
+			}
+		}
 	},
 }
 
@@ -49,5 +89,6 @@ func init() {
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
-	buildCmd.Flags().BoolP("dryrun", "d", false, "Do not push to registry")
+	buildCmd.Flags().BoolP("no-push", "n", false, "Do not push to registry")
+
 }
