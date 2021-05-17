@@ -26,7 +26,6 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -62,15 +61,11 @@ and use this to populate a docker registry. `,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) < 1 {
-			fmt.Println("building all")
 			matches, _ := filepath.Glob(viper.GetString("buildImageDirname") + "/**/Dockerfile*")
 			for _, match := range matches {
 				buildImage(match, cmd)
 			}
-
 		} else {
-
-			fmt.Println("building args that match")
 			for _, arg := range args {
 
 				var image string = arg
@@ -129,7 +124,7 @@ func buildImage(filename string, cmd *cobra.Command) {
 
 	var mach_tag = viper.GetString("docker_registry") + ":" + filepath.Base(filepath.Dir(filename)) + variant
 
-	fmt.Println("Building image with tag " + mach_tag)
+	color.HiYellow("Building image with tag " + mach_tag)
 
 	var DockerFilename string = filepath.Base(filename)
 
@@ -201,8 +196,6 @@ func pushImage(mach_tag string) {
 		panic(err)
 	}
 
-	fmt.Println("attempting to push image " + mach_tag)
-
 	var authConfig = types.AuthConfig{
 		Username:      viper.GetString("docker_user"),
 		Password:      viper.GetString("docker_pass"),
@@ -218,8 +211,6 @@ func pushImage(mach_tag string) {
 
 	opts := types.ImagePushOptions{RegistryAuth: authConfigEncoded}
 	rd, err := cli.ImagePush(ctx, tag, opts)
-
-	// io.Copy(os.Stdout, rd)
 
 	termFd, isTerm := term.GetFdInfo(os.Stderr)
 	jsonmessage.DisplayJSONMessagesStream(rd, os.Stderr, termFd, isTerm, nil)
@@ -252,8 +243,8 @@ func dockerLog(msg string) {
 	json.Unmarshal([]byte(msg), &result)
 
 	for key, value := range result {
-		// Each value is an interface{} type, that is type asserted as a string
 		switch msgtype := key; msgtype {
+
 		case "status":
 			color.Yellow(value.(string))
 		case "stream":
@@ -263,6 +254,5 @@ func dockerLog(msg string) {
 		default:
 			color.White(msg)
 		}
-
 	}
 }
