@@ -157,7 +157,7 @@ func buildImage(filename string, cmd *cobra.Command) {
 		f.Close()
 	}
 
-	tar, err := archive.TarWithOptions(filepath.Dir(filename)+"/"+DockerFilename, &archive.TarOptions{})
+	tar, err := archive.TarWithOptions(filepath.Dir(filename)+"/", &archive.TarOptions{})
 	if err != nil {
 		log.Fatal(err)
 	}
