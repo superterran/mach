@@ -37,9 +37,9 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
 	"github.com/docker/docker/pkg/jsonmessage"
-	"github.com/docker/docker/pkg/term"
 	"github.com/fatih/color"
 	"github.com/go-git/go-git/v5"
+	"github.com/moby/term"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

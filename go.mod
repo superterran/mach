@@ -10,6 +10,7 @@ require (
 	github.com/go-git/go-git/v5 v5.3.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/moby/sys/mount v0.2.0 // indirect
+	github.com/moby/term v0.0.0-20201216013528-df9cb8a40635 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/spf13/cobra v1.1.3 // indirect
 	github.com/spf13/viper v1.7.0 // indirect
