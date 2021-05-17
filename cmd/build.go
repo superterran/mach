@@ -39,6 +39,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
 	"github.com/fatih/color"
+	"github.com/go-git/go-git/v5"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -110,9 +111,24 @@ func buildImage(filename string, cmd *cobra.Command) {
 
 	var mach_tag = viper.GetString("docker_registry") + ":" + filepath.Base(filepath.Dir(filename)) + variant
 
-	fmt.Println("Building image with tag " + mach_tag)
+	repo, err := git.PlainOpen(".")
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	// add templating
+	head, err := repo.Head()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if strings.Contains(head.String(), "/") {
+		var variant_branch string = "-" + strings.Split(head.String(), "/")[2]
+		if variant_branch != "main" {
+			variant += "-" + variant_branch
+		}
+	}
+
+	fmt.Println("Building image with tag " + mach_tag)
 
 	var DockerFilename string = filepath.Base(filename)
 
