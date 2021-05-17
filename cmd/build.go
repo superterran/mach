@@ -239,6 +239,7 @@ func init() {
 
 	viper.SetDefault("buildImageDirname", "./images")
 	viper.SetDefault("defaultGitBranch", "main")
+	viper.SetDefault("docker_host", "https://index.docker.io/v1/")
 
 }
 
