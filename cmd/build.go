@@ -173,13 +173,13 @@ func buildImage(filename string, cmd *cobra.Command) {
 	for scanner.Scan() {
 
 		var lastLine = scanner.Text()
-		dockerLog(scanner.Text())
 
 		errLine := &ErrorLine{}
 		json.Unmarshal([]byte(lastLine), errLine)
 		if errLine.Error != "" {
-			dockerLog(errLine.Error)
-			log.Fatal(errLine.Error)
+			log.Fatal(color.RedString(errLine.Error))
+		} else {
+			dockerLog(scanner.Text())
 		}
 	}
 
@@ -250,7 +250,8 @@ func dockerLog(msg string) {
 		case "stream":
 			color.Blue(value.(string))
 		case "aux":
-			// color.Green(msg)
+		case "errorDetail":
+			// do nothing
 		default:
 			color.White(msg)
 		}
