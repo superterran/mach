@@ -250,7 +250,7 @@ func dockerLog(msg string) {
 		case "stream":
 			color.Blue(value.(string))
 		case "aux":
-			color.Green(msg)
+			// color.Green(msg)
 		default:
 			color.White(msg)
 		}
