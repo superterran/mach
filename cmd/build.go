@@ -109,8 +109,6 @@ func buildImage(filename string, cmd *cobra.Command) {
 
 	variant = strings.Replace(variant, ".tpl", "", 1)
 
-	var mach_tag = viper.GetString("docker_registry") + ":" + filepath.Base(filepath.Dir(filename)) + variant
-
 	repo, err := git.PlainOpen(".")
 	if err != nil {
 		log.Fatal(err)
@@ -122,11 +120,13 @@ func buildImage(filename string, cmd *cobra.Command) {
 	}
 
 	if strings.Contains(head.String(), "/") {
-		var variant_branch string = "-" + strings.Split(head.String(), "/")[2]
+		var variant_branch string = strings.Split(head.String(), "/")[2]
 		if variant_branch != "main" {
-			variant += "-" + variant_branch
+			variant = "-" + variant_branch
 		}
 	}
+
+	var mach_tag = viper.GetString("docker_registry") + ":" + filepath.Base(filepath.Dir(filename)) + variant
 
 	fmt.Println("Building image with tag " + mach_tag)
 
