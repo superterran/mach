@@ -32,6 +32,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"text/template"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -98,23 +99,54 @@ func buildImage(filename string, cmd *cobra.Command) {
 		log.Fatal(err)
 	}
 
-	tar, err := archive.TarWithOptions(filename, &archive.TarOptions{})
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	var variant string = ""
 
 	if strings.Contains(filepath.Base(filename), "-") {
 		variant = "-" + strings.Split(filepath.Base(filename), "-")[1]
 	}
 
+	variant = strings.Replace(variant, ".tpl", "", 1)
+
 	var mach_tag = viper.GetString("docker_registry") + ":" + filepath.Base(filepath.Dir(filename)) + variant
 
 	fmt.Println("Building image with tag " + mach_tag)
 
+	// add templating
+
+	var DockerFilename string = filepath.Base(filename)
+
+	if filepath.Ext(filename) == ".tpl" {
+		tpl, err := template.ParseGlob(filename)
+		if err != nil {
+			panic(err)
+		}
+
+		tpl.ParseGlob(filepath.Dir(filename) + "/includes/*.tpl")
+
+		DockerFilename = "." + strings.TrimSuffix(filepath.Base(filename), ".tpl") + ".generated"
+
+		f, err := os.Create(filepath.Dir(filename) + "/" + DockerFilename)
+
+		if err != nil {
+			panic(err)
+		}
+
+		err = tpl.Execute(f, filepath.Base(filename))
+		if err != nil {
+			log.Print("execute: ", err)
+			return
+		}
+
+		f.Close()
+	}
+
+	tar, err := archive.TarWithOptions(filepath.Dir(filename)+"/"+DockerFilename, &archive.TarOptions{})
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	opts := types.ImageBuildOptions{
-		Dockerfile: filepath.Base(filename),
+		Dockerfile: DockerFilename,
 		Remove:     true,
 		Tags:       []string{mach_tag},
 	}
