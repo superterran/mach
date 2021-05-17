@@ -121,7 +121,7 @@ func buildImage(filename string, cmd *cobra.Command) {
 
 	if strings.Contains(head.String(), "/") {
 		var variant_branch string = strings.Split(head.String(), "/")[2]
-		if variant_branch != "main" {
+		if variant_branch != viper.GetString("defaultGitBranch") {
 			variant = "-" + variant_branch
 		}
 	}
@@ -238,6 +238,7 @@ func init() {
 	buildCmd.Flags().BoolP("no-push", "n", false, "Do not push to registry")
 
 	viper.SetDefault("buildImageDirname", "./images")
+	viper.SetDefault("defaultGitBranch", "main")
 
 }
 

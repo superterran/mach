@@ -3,3 +3,7 @@ docker_registry: superterran/mach
 docker_host: https://index.docker.io/v1/
 docker_user: <docker hub user>
 docker_pass: <docker hub password or token>
+
+# optional parameters
+
+defaultGitBranch: main
