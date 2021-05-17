@@ -1,3 +1,10 @@
+ifeq (run,$(firstword $(MAKECMDGOALS)))
+  # use the rest as arguments for "run"
+  RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  # ...and turn them into do-nothing targets
+  $(eval $(RUN_ARGS):;@:)
+endif
+
 .PHONY: help
 
 help:
@@ -8,3 +15,5 @@ build: ## creates binary
 install: build ## compiles and installs into system
 	sudo cp mach /usr/local/bin/mach
 	sudo chmod +x /usr/local/bin/mach
+run: ## run the command through go, accepts args
+	go run ./main.go $(RUN_ARGS)
