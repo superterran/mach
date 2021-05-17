@@ -27,7 +27,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -38,6 +37,8 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
+	"github.com/docker/docker/pkg/jsonmessage"
+	"github.com/docker/docker/pkg/term"
 	"github.com/fatih/color"
 	"github.com/go-git/go-git/v5"
 	"github.com/spf13/cobra"
@@ -218,7 +219,10 @@ func pushImage(mach_tag string) {
 	opts := types.ImagePushOptions{RegistryAuth: authConfigEncoded}
 	rd, err := cli.ImagePush(ctx, tag, opts)
 
-	io.Copy(os.Stdout, rd)
+	// io.Copy(os.Stdout, rd)
+
+	termFd, isTerm := term.GetFdInfo(os.Stderr)
+	jsonmessage.DisplayJSONMessagesStream(rd, os.Stderr, termFd, isTerm, nil)
 
 	if err != nil {
 		log.Fatal(err)
