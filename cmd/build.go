@@ -38,6 +38,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/archive"
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -160,11 +161,12 @@ func buildImage(filename string, cmd *cobra.Command) {
 	for scanner.Scan() {
 
 		var lastLine = scanner.Text()
-		fmt.Println(scanner.Text())
+		dockerLog(scanner.Text())
 
 		errLine := &ErrorLine{}
 		json.Unmarshal([]byte(lastLine), errLine)
 		if errLine.Error != "" {
+			dockerLog(errLine.Error)
 			log.Fatal(errLine.Error)
 		}
 	}
@@ -221,4 +223,24 @@ func init() {
 
 	viper.SetDefault("buildImageDirname", "./images")
 
+}
+
+func dockerLog(msg string) {
+	var result map[string]interface{}
+	json.Unmarshal([]byte(msg), &result)
+
+	for key, value := range result {
+		// Each value is an interface{} type, that is type asserted as a string
+		switch msgtype := key; msgtype {
+		case "status":
+			color.Yellow(value.(string))
+		case "stream":
+			color.Blue(value.(string))
+		case "aux":
+			color.Green(msg)
+		default:
+			color.White(msg)
+		}
+
+	}
 }
