@@ -61,36 +61,52 @@ func createBuildCmd() *cobra.Command {
 		Short: "Builds a directory of docker images and pushes them to a registry",
 		Long: `This allows you to maintain a directory of docker images, with templating,
 	and use this to populate a docker registry. `,
-		Run: func(cmd *cobra.Command, args []string) {
-
-			if len(args) < 1 {
-				matches, _ := filepath.Glob(viper.GetString("buildImageDirname") + "/**/Dockerfile*")
-				for _, match := range matches {
-					buildImage(match, cmd)
-				}
-			} else {
-				for _, arg := range args {
-
-					var image string = arg
-					var variant string
-
-					if strings.Contains(arg, ":") {
-						image = strings.Split(arg, ":")[0]
-						variant = "-" + strings.Split(arg, ":")[1]
-					}
-
-					matches, _ := filepath.Glob(viper.GetString("buildImageDirname") + "/" + image + "/Dockerfile" + variant + "*")
-					for _, match := range matches {
-						buildImage(match, cmd)
-					}
-				}
-			}
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runBuild(cmd, args)
 		},
 	}
 	return cmd
 }
 
-func buildImage(filename string, cmd *cobra.Command) {
+// runHelloExt is the main function of `ext`.
+func runBuild(cmd *cobra.Command, args []string) error {
+	if len(args) < 1 {
+		matches, _ := filepath.Glob(viper.GetString("buildImageDirname") + "/**/Dockerfile*")
+		for _, match := range matches {
+			var mach_tag string = buildImage(match, false)
+
+			fnopush, _ := cmd.Flags().GetBool("no-push")
+			if !fnopush {
+				pushImage(mach_tag, false)
+			}
+		}
+	} else {
+		for _, arg := range args {
+
+			var image string = arg
+			var variant string
+
+			if strings.Contains(arg, ":") {
+				image = strings.Split(arg, ":")[0]
+				variant = "-" + strings.Split(arg, ":")[1]
+			}
+
+			matches, _ := filepath.Glob(viper.GetString("buildImageDirname") + "/" + image + "/Dockerfile" + variant + "*")
+			for _, match := range matches {
+				var mach_tag string = buildImage(match, false)
+
+				fnopush, _ := cmd.Flags().GetBool("no-push")
+				if !fnopush {
+					pushImage(mach_tag, false)
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func buildImage(filename string, testing bool) string {
 
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
@@ -112,18 +128,21 @@ func buildImage(filename string, cmd *cobra.Command) {
 
 	repo, err := git.PlainOpen(".")
 	if err != nil {
-		log.Fatal(err)
-	}
-
-	head, err := repo.Head()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if strings.Contains(head.String(), "/") {
-		var variant_branch string = strings.Split(head.String(), "/")[2]
-		if variant_branch != viper.GetString("defaultGitBranch") {
-			variant = "-" + variant_branch
+		if !testing {
+			log.Fatal(err)
+		} else {
+			variant = "-" + "test_variant"
+		}
+	} else {
+		head, err := repo.Head()
+		if err != nil {
+			log.Fatal(err)
+		}
+		if strings.Contains(head.String(), "/") {
+			var variant_branch string = strings.Split(head.String(), "/")[2]
+			if variant_branch != viper.GetString("defaultGitBranch") {
+				variant = "-" + variant_branch
+			}
 		}
 	}
 
@@ -152,7 +171,7 @@ func buildImage(filename string, cmd *cobra.Command) {
 		err = tpl.Execute(f, filepath.Base(filename))
 		if err != nil {
 			log.Print("execute: ", err)
-			return
+			return ""
 		}
 
 		f.Close()
@@ -170,33 +189,39 @@ func buildImage(filename string, cmd *cobra.Command) {
 	}
 
 	res, err := cli.ImageBuild(ctx, tar, opts)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	scanner := bufio.NewScanner(res.Body)
-	for scanner.Scan() {
-
-		var lastLine = scanner.Text()
-
-		errLine := &ErrorLine{}
-		json.Unmarshal([]byte(lastLine), errLine)
-		if errLine.Error != "" {
-			log.Fatal(color.RedString(errLine.Error))
-		} else {
-			dockerLog(scanner.Text())
+	if !testing {
+		if err != nil {
+			log.Fatal(err)
 		}
+		scanner := bufio.NewScanner(res.Body)
+		for scanner.Scan() {
+
+			var lastLine = scanner.Text()
+
+			errLine := &ErrorLine{}
+			json.Unmarshal([]byte(lastLine), errLine)
+			if errLine.Error != "" {
+				log.Fatal(color.RedString(errLine.Error))
+			} else {
+				dockerLog(scanner.Text())
+			}
+		}
+	} else {
+		return "skipping image build"
 	}
 
-	fnopush, _ := cmd.Flags().GetBool("no-push")
-	if !fnopush {
-		pushImage(mach_tag)
-	}
+	return mach_tag
+
 }
 
-func pushImage(mach_tag string) {
+func pushImage(mach_tag string, testing bool) string {
+
+	if testing {
+		return "skipping push due to testing"
+	}
 
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+
 	if err != nil {
 		panic(err)
 	}
@@ -230,6 +255,7 @@ func pushImage(mach_tag string) {
 
 	defer rd.Close()
 
+	return "push complete"
 }
 
 func init() {

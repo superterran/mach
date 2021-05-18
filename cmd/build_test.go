@@ -49,9 +49,50 @@ func Test_buildCmd(t *testing.T) {
 		assert.FailNowf(t, "Failed to execute 'buildCmd.Execute()'.", "Error msg: %v", err)
 	}
 
-	expect = "Hello, world!\n"
+	expect = ""
 	actual = buffTmp.String() // resotre buffer
 	assert.Equal(t, expect, actual,
-		"Command 'hello' should return 'Hello, world!'.",
+		"Command 'build' with no parameters should produce an empty value.",
+	)
+}
+
+func Test_buildCmd_Help(t *testing.T) {
+	var (
+		buildCmd = createBuildCmd()
+		argsTmp  = []string{"--help"}
+		buffTmp  = new(bytes.Buffer)
+
+		expect string
+		actual string
+	)
+
+	buildCmd.SetOut(buffTmp)  // set output from os.Stdout -> buffTmp
+	buildCmd.SetArgs(argsTmp) // set command args
+
+	// Run `hello` command!
+	if err := buildCmd.Execute(); err != nil {
+		assert.FailNowf(t, "Failed to execute 'buildCmd.Execute()'.", "Error msg: %v", err)
+	}
+
+	expect = "Usage:"
+	actual = buffTmp.String() // resotre buffer
+	assert.Contains(t, actual, expect,
+		"Command 'help' should show usage",
+	)
+}
+
+func Test_BasicExampleBuild(t *testing.T) {
+	var expect = "skipping image build"
+	var actual = buildImage("images/example/Dockerfile", true)
+	assert.Contains(t, actual, expect,
+		"buildImage method should get to end, skipping image build due to testing state",
+	)
+}
+
+func Test_BasicExamplePush(t *testing.T) {
+	var expect = "skipping push due to testing"
+	var actual = pushImage("example-varient", true)
+	assert.Contains(t, actual, expect,
+		"pushImage method should get to end, skipping push due to testing state",
 	)
 }
