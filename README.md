@@ -7,7 +7,7 @@
 [Installation Guide](https://github.com/superterran/mach/wiki/Installation) |
 [Contribution Guide](CONTRIBUTING.md)
 
-A cli application for using docker to *quickly* and *easily* manage infrastructure and services.
+A cli application for using docker to *quickly* and *easily* manage infrastructure and services through code.
 
 [![GoDoc](https://godoc.org/github.com/gohugoio/hugo?status.svg)](https://pkg.go.dev/github.com/superterran/mach)
 [![Go](https://github.com/superterran/mach/actions/workflows/go.yml/badge.svg?branch=main)](https://github.com/superterran/mach/actions/workflows/go.yml) 
