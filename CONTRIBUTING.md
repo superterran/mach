@@ -14,7 +14,7 @@ Set up your machine:
     make build
 ```
 
-Use cobra to create new feature, if needed:
+You can use cobra to create new feature, but with unit testing it may be easier to dupliate the files as they exist:
 
 ```bash
 cobra add <command>
@@ -37,7 +37,7 @@ Make your changes, Add tests for your change, Make the tests pass:
 Make your change. Add tests for your change. Make the tests pass:
 
 ```bash
-    rake
+    make test
 ```
 
 Push to your fork and [submit a pull request][pr].
