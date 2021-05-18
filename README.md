@@ -17,7 +17,11 @@ Mach provides some tooling around a simple docker and docker-machine based repo 
 
 ## Installation
 
-Mach is a simple command-line tool and only one executable. You can grab it from the [releases](https://github.com/superterran/mach/releases/) page, and use it as-is. It can be copied to a working directory, even commited, and invoked directly i.e. `bin/mach`, or installed to a PATH and used globally i.e. `cp ~/Downloads/mach /usr/local/bin/mach && chmod +x /usr/local/bin/mach`. Perhaps one day it'll be a homebrew tap.
+Mach is a simple command-line tool and only one executable. 
+
+* You can grab it from the [releases](https://github.com/superterran/mach/releases/) page, and use it as-is. 
+    * It can be copied to a working directory, even commited, and invoked directly i.e. `bin/mach`
+    * It can also be installed to a PATH and used globally i.e. `cp ~/Downloads/mach /usr/local/bin/mach && chmod +x /usr/local/bin/mach`. 
 
 You can also use the bundled Makefile to install it manually: 
 
@@ -41,3 +45,6 @@ Bug reports and pull requests are welcome on GitHub at https://github.com/supert
 
 # License
 Mach is released under the [MIT License](LICENSE)
+
+# Author Information
+This project was started in 2021 by Doug Hatcher <superterran@gmail.com>.
