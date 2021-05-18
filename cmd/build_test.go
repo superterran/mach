@@ -91,7 +91,7 @@ func Test_BasicExampleBuild(t *testing.T) {
 
 func Test_BasicExamplePush(t *testing.T) {
 	var expect = "skipping push due to testing"
-	var actual = pushImage("example-varient", true)
+	var actual = pushImage("example-variant", true)
 	assert.Contains(t, actual, expect,
 		"pushImage method should get to end, skipping push due to testing state",
 	)
