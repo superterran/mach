@@ -44,6 +44,8 @@ import (
 	"github.com/spf13/viper"
 )
 
+var buildCmd = createBuildCmd()
+
 type ErrorLine struct {
 	Error       string      `json:"error"`
 	ErrorDetail ErrorDetail `json:"errorDetail"`
@@ -53,36 +55,39 @@ type ErrorDetail struct {
 	Message string `json:"message"`
 }
 
-var buildCmd = &cobra.Command{
-	Use:   "build [docker-image[:tag]]",
-	Short: "Builds a directory of docker images and pushes them to a registry",
-	Long: `This allows you to maintain a directory of docker images, with templating,
-and use this to populate a docker registry. `,
-	Run: func(cmd *cobra.Command, args []string) {
+func createBuildCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "build [docker-image[:tag]]",
+		Short: "Builds a directory of docker images and pushes them to a registry",
+		Long: `This allows you to maintain a directory of docker images, with templating,
+	and use this to populate a docker registry. `,
+		Run: func(cmd *cobra.Command, args []string) {
 
-		if len(args) < 1 {
-			matches, _ := filepath.Glob(viper.GetString("buildImageDirname") + "/**/Dockerfile*")
-			for _, match := range matches {
-				buildImage(match, cmd)
-			}
-		} else {
-			for _, arg := range args {
-
-				var image string = arg
-				var variant string
-
-				if strings.Contains(arg, ":") {
-					image = strings.Split(arg, ":")[0]
-					variant = "-" + strings.Split(arg, ":")[1]
-				}
-
-				matches, _ := filepath.Glob(viper.GetString("buildImageDirname") + "/" + image + "/Dockerfile" + variant + "*")
+			if len(args) < 1 {
+				matches, _ := filepath.Glob(viper.GetString("buildImageDirname") + "/**/Dockerfile*")
 				for _, match := range matches {
 					buildImage(match, cmd)
 				}
+			} else {
+				for _, arg := range args {
+
+					var image string = arg
+					var variant string
+
+					if strings.Contains(arg, ":") {
+						image = strings.Split(arg, ":")[0]
+						variant = "-" + strings.Split(arg, ":")[1]
+					}
+
+					matches, _ := filepath.Glob(viper.GetString("buildImageDirname") + "/" + image + "/Dockerfile" + variant + "*")
+					for _, match := range matches {
+						buildImage(match, cmd)
+					}
+				}
 			}
-		}
-	},
+		},
+	}
+	return cmd
 }
 
 func buildImage(filename string, cmd *cobra.Command) {
