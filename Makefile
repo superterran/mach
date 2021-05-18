@@ -17,3 +17,5 @@ install: build ## compiles and installs into system
 	sudo chmod +x /usr/local/bin/mach
 run: ## run the command through go, accepts args i.e. `make run -- build -h`
 	go run ./main.go $(RUN_ARGS)
+test:
+	go test --cover ./... 
