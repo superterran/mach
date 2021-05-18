@@ -9,6 +9,7 @@
 
 A cli application for using docker to *quickly* and *easily* manage infrastructure and services.
 
+[![GoDoc](https://godoc.org/github.com/gohugoio/hugo?status.svg)](https://pkg.go.dev/github.com/superterran/mach)
 [![Go](https://github.com/superterran/mach/actions/workflows/go.yml/badge.svg?branch=main)](https://github.com/superterran/mach/actions/workflows/go.yml) 
 [![Go Report Card](https://goreportcard.com/badge/github.com/superterran/mach)](https://goreportcard.com/report/github.com/superterran/mach)
 [![codecov](https://codecov.io/gh/superterran/mach/branch/main/graph/badge.svg?token=S48U2MJP9I)](https://codecov.io/gh/superterran/mach)
