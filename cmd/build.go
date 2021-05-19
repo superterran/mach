@@ -51,6 +51,8 @@ var testMode = false
 
 var outputOnly = false
 
+var firstOnly = false
+
 type ErrorLine struct {
 	Error       string      `json:"error"`
 	ErrorDetail ErrorDetail `json:"errorDetail"`
@@ -81,6 +83,7 @@ func init() {
 
 	buildCmd.Flags().BoolP("no-push", "n", false, "Do not push to registry")
 	buildCmd.Flags().BoolP("output-only", "o", false, "send output to stdout, do not build")
+	buildCmd.Flags().BoolP("first-only", "f", false, "breaks after processing first image if more than one")
 
 	viper.SetDefault("buildImageDirname", "./images")
 	viper.SetDefault("defaultGitBranch", "main")
@@ -101,12 +104,18 @@ func runBuild(cmd *cobra.Command, args []string) error {
 
 	fnopush, _ := cmd.Flags().GetBool("no-push")
 
+	firstOnly, _ := cmd.Flags().GetBool("first-only")
+
 	if len(args) < 1 {
 		matches, _ := filepath.Glob(viper.GetString("buildImageDirname") + "/**/Dockerfile*")
 		for _, match := range matches {
 			var mach_tag string = buildImage(match)
 			if !fnopush || outputonly {
 				pushImage(mach_tag)
+			}
+
+			if firstOnly {
+				break
 			}
 		}
 	} else {
@@ -126,6 +135,10 @@ func runBuild(cmd *cobra.Command, args []string) error {
 
 				if !fnopush || outputonly {
 					pushImage(mach_tag)
+				}
+
+				if firstOnly {
+					break
 				}
 			}
 		}
