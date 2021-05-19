@@ -22,8 +22,14 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"archive/tar"
+	"compress/gzip"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -35,6 +41,8 @@ import (
 )
 
 var backupCmd = createBackupCmd()
+
+var tmpDir = ""
 
 func createBackupCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -72,7 +80,174 @@ func runBackup(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(args) == 1 {
-		uploadFileToBucket(args[0])
+		createTempDirectory()
+		populateTempDir(args[0])
+		transformFilesInTemp(args[0])
+		createMachineTarball(args[0])
+		// uploadFileToBucket(args[0])
+
+		defer os.RemoveAll(tmpDir)
+	}
+
+	return nil
+}
+
+func transformFilesInTemp(machine string) {
+	// 	sed -i.bak "s|$HOME|${TEMPLATE_HOME_DIR}|g" $DEST_DIR/config.json
+	// sed -i.bak "s|/$MACHINE_NAME/|/${TEMPLATE_MACHINE_NAME}/|g" $DEST_DIR/config.json
+	// sed -i.bak -e "s|\(\"Name\" *: *\"\)$MACHINE_NAME\"|\1${TEMPLATE_MACHINE_NAME}\"|g" $DEST_DIR/config.json
+	// sed -i.bak "s|.docker/machine/certs/|.docker/machine/machines/${TEMPLATE_MACHINE_NAME}/|g" $DEST_DIR/config.json
+}
+
+func populateTempDir(machine string) {
+
+	homedir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(homedir)
+
+	var machinedir = homedir + "/.docker/machine/machines/" + machine + "/"
+	var certsdir = homedir + ".docker/machine/certs/"
+
+	copy(machinedir + "ca.pem")
+	copy(machinedir + "cert.pem")
+	copy(machinedir + "config.json")
+	copy(machinedir + "config.json.template")
+	copy(machinedir + "key.pem")
+	copy(machinedir + "server-key.pem")
+	copy(machinedir + "server.pem")
+	copy(certsdir + "ca-key.pem")
+	copy(certsdir + "ca.pem")
+	copy(certsdir + "cert.pem")
+	copy(certsdir + "key.pem")
+
+}
+
+func createTempDirectory() string {
+	dir, err := ioutil.TempDir("/tmp", "machine")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	tmpDir = dir
+	return tmpDir
+}
+
+func copy(src string) (int64, error) {
+
+	fmt.Println(src)
+
+	sourceFileStat, err := os.Stat(src)
+	if err != nil {
+		return 0, err
+	}
+
+	if !sourceFileStat.Mode().IsRegular() {
+		return 0, fmt.Errorf("%s is not a regular file", src)
+	}
+
+	source, err := os.Open(src)
+	if err != nil {
+		return 0, err
+	}
+	defer source.Close()
+
+	destination, err := os.Create(tmpDir + "/" + filepath.Base(src))
+	if err != nil {
+		return 0, err
+	}
+	defer destination.Close()
+	nBytes, err := io.Copy(destination, source)
+	return nBytes, err
+}
+
+func createMachineTarball(machine string) {
+	// Files which to include in the tar.gz archive
+	var files []string
+
+	fs, err := ioutil.ReadDir(tmpDir)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, f := range fs {
+		files = append(files, tmpDir+"/"+f.Name())
+	}
+
+	// Create output file
+	out, err := os.Create(machine + ".tar.gz")
+	if err != nil {
+		log.Fatalln("Error writing archive:", err)
+	}
+	defer out.Close()
+
+	// Create the archive and write the output to the "out" Writer
+	err = createArchive(files, out)
+	if err != nil {
+		log.Fatalln("Error creating archive:", err)
+	}
+
+	fmt.Println("Archive created successfully")
+}
+
+func createArchive(files []string, buf io.Writer) error {
+	// Create new Writers for gzip and tar
+	// These writers are chained. Writing to the tar writer will
+	// write to the gzip writer which in turn will write to
+	// the "buf" writer
+	gw := gzip.NewWriter(buf)
+	defer gw.Close()
+	tw := tar.NewWriter(gw)
+	defer tw.Close()
+
+	// Iterate over files and add them to the tar archive
+	for _, file := range files {
+		err := addToArchive(tw, file)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func addToArchive(tw *tar.Writer, filename string) error {
+	// Open the file which will be written into the archive
+	file, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	// Get FileInfo about our file providing file size, mode, etc.
+	info, err := file.Stat()
+	if err != nil {
+		return err
+	}
+
+	// Create a tar Header from the FileInfo data
+	header, err := tar.FileInfoHeader(info, info.Name())
+	if err != nil {
+		return err
+	}
+
+	// Use full path as name (FileInfoHeader only takes the basename)
+	// If we don't do this the directory strucuture would
+	// not be preserved
+	// https://golang.org/src/archive/tar/common.go?#L626
+	header.Name = filename
+
+	// Write file header to the tar archive
+	err = tw.WriteHeader(header)
+	if err != nil {
+		return err
+	}
+
+	// Copy file content to tar archive
+	_, err = io.Copy(tw, file)
+	if err != nil {
+		return err
 	}
 
 	return nil
