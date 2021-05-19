@@ -1,6 +1,6 @@
 # Contributing
 
-We love pull requests from everyone! 
+We love pull requests!
 
 Fork, then clone the repo:
 
@@ -14,16 +14,16 @@ Set up your machine:
     make build
 ```
 
-Use cobra to create new feature, if needed:
+You can use cobra to create a new feature, but with unit testing it may be easier to dupliate the files already in use:
 
 ```bash
 cobra add <command>
 ```
 
-Make sure the tests pass:
+Make sure the existing tests pass:
 
 ```bash
-    go test ./...
+    make test
 ```
 
 While creating new commands, don't forget to create a `_test.go` file.
@@ -31,13 +31,13 @@ While creating new commands, don't forget to create a `_test.go` file.
 Make your changes, Add tests for your change, Make the tests pass:
 
 ```bash
-    go test ./...
+    make test
 ```
 
 Make your change. Add tests for your change. Make the tests pass:
 
 ```bash
-    rake
+    make test
 ```
 
 Push to your fork and [submit a pull request][pr].
