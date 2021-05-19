@@ -49,6 +49,8 @@ var buildCmd = createBuildCmd()
 
 var testMode = false
 
+var outputOnly = false
+
 type ErrorLine struct {
 	Error       string      `json:"error"`
 	ErrorDetail ErrorDetail `json:"errorDetail"`
@@ -90,13 +92,20 @@ func init() {
 }
 
 func runBuild(cmd *cobra.Command, args []string) error {
+
+	outputonly, _ := cmd.Flags().GetBool("output-only")
+	if outputonly {
+		testMode = true
+		outputOnly = true
+	}
+
+	fnopush, _ := cmd.Flags().GetBool("no-push")
+
 	if len(args) < 1 {
 		matches, _ := filepath.Glob(viper.GetString("buildImageDirname") + "/**/Dockerfile*")
 		for _, match := range matches {
 			var mach_tag string = buildImage(match)
-
-			fnopush, _ := cmd.Flags().GetBool("no-push")
-			if !fnopush {
+			if !fnopush || outputonly {
 				pushImage(mach_tag)
 			}
 		}
@@ -115,8 +124,7 @@ func runBuild(cmd *cobra.Command, args []string) error {
 			for _, match := range matches {
 				var mach_tag string = buildImage(match)
 
-				fnopush, _ := cmd.Flags().GetBool("no-push")
-				if !fnopush {
+				if !fnopush || outputonly {
 					pushImage(mach_tag)
 				}
 			}
@@ -145,7 +153,7 @@ func getBranchVariant() string {
 
 	repo, err := git.PlainOpen(".")
 	if err != nil {
-		branch = "origin/refs/changeme"
+		branch = "origin/refs/main"
 	} else {
 
 		head, err := repo.Head()
@@ -186,41 +194,36 @@ func buildImage(filename string) string {
 
 	var mach_tag = getTag(filename)
 
-	color.HiYellow("Building image with tag " + mach_tag)
+	if !outputOnly {
+		color.HiYellow("Building image with tag " + mach_tag)
+	}
 
-	var DockerFilename string = filepath.Base(filename)
+	var DockerFilename string = filepath.Dir(filename) + "/." + filepath.Base(filename) + ".generated"
 
-	if filepath.Ext(filename) == ".tpl" {
+	if outputOnly || testMode {
 
-		DockerFilename = "." + strings.TrimSuffix(filepath.Base(filename), ".tpl") + ".generated"
+		generateTemplate(os.Stdout, filename)
+		return mach_tag
 
-		if viper.GetBool("output-only") {
-
-			generateTemplate(os.Stdout, filename)
-
-			return "ouput only mode"
-
-		} else {
-			f, err := os.Create(filepath.Dir(filename) + "/" + DockerFilename)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			generateTemplate(f, filename)
-
-			f.Close()
+	} else {
+		f, err := os.Create(DockerFilename)
+		if err != nil {
+			log.Fatal(err)
 		}
+
+		generateTemplate(f, filename)
+
+		f.Close()
 	}
 
 	if !testMode {
-
-		tar, err := archive.TarWithOptions(filepath.Dir(filename)+"/", &archive.TarOptions{})
+		tar, err := archive.TarWithOptions(filepath.Dir(DockerFilename), &archive.TarOptions{})
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		opts := types.ImageBuildOptions{
-			Dockerfile: DockerFilename,
+			Dockerfile: filepath.Base(DockerFilename),
 			Remove:     true,
 			Tags:       []string{mach_tag},
 		}
@@ -250,8 +253,6 @@ func buildImage(filename string) string {
 				dockerLog(scanner.Text())
 			}
 		}
-	} else {
-		return "skipping image build"
 	}
 
 	return mach_tag

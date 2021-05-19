@@ -81,14 +81,6 @@ func Test_buildCmd_Help(t *testing.T) {
 	)
 }
 
-func Test_BasicExampleBuild(t *testing.T) {
-	var expect = "skipping image build"
-	var actual = buildImage("images/example/Dockerfile")
-	assert.Contains(t, actual, expect,
-		"buildImage method should get to end, skipping image build due to testing state",
-	)
-}
-
 func Test_BasicExamplePush(t *testing.T) {
 	var expect = "skipping push due to testMode"
 	var actual = pushImage("example-variant")
@@ -98,10 +90,10 @@ func Test_BasicExamplePush(t *testing.T) {
 }
 
 func Test_BranchVariant(t *testing.T) {
-	var expect = "-changeme"
+	var expect = ""
 	var actual = getBranchVariant()
 	assert.Contains(t, actual, expect,
-		"branch variant should come back as -changeme",
+		"branch variant should come back as empty",
 	)
 }
 
