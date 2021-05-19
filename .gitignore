@@ -19,3 +19,4 @@
 **.generated
 mach
 coverage.txt
+*.tar.gz

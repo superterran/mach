@@ -84,7 +84,7 @@ func runBackup(cmd *cobra.Command, args []string) error {
 		populateTempDir(args[0])
 		transformFilesInTemp(args[0])
 		createMachineTarball(args[0])
-		// uploadFileToBucket(args[0])
+		uploadFileToBucket(args[0])
 
 		defer os.RemoveAll(tmpDir)
 	}
@@ -93,10 +93,7 @@ func runBackup(cmd *cobra.Command, args []string) error {
 }
 
 func transformFilesInTemp(machine string) {
-	// 	sed -i.bak "s|$HOME|${TEMPLATE_HOME_DIR}|g" $DEST_DIR/config.json
-	// sed -i.bak "s|/$MACHINE_NAME/|/${TEMPLATE_MACHINE_NAME}/|g" $DEST_DIR/config.json
-	// sed -i.bak -e "s|\(\"Name\" *: *\"\)$MACHINE_NAME\"|\1${TEMPLATE_MACHINE_NAME}\"|g" $DEST_DIR/config.json
-	// sed -i.bak "s|.docker/machine/certs/|.docker/machine/machines/${TEMPLATE_MACHINE_NAME}/|g" $DEST_DIR/config.json
+
 }
 
 func populateTempDir(machine string) {
@@ -112,7 +109,7 @@ func populateTempDir(machine string) {
 
 	copy(machinedir + "ca.pem")
 	copy(machinedir + "cert.pem")
-	copy(machinedir + "config.json")
+
 	copy(machinedir + "config.json.template")
 	copy(machinedir + "key.pem")
 	copy(machinedir + "server-key.pem")
@@ -121,6 +118,12 @@ func populateTempDir(machine string) {
 	copy(certsdir + "ca.pem")
 	copy(certsdir + "cert.pem")
 	copy(certsdir + "key.pem")
+
+	var config = machinedir + "config.json"
+
+	copy(config)
+	replaceInTempFile(config, homedir, "${TEMPLATE_HOME_DIR}")
+	replaceInTempFile(config, machine, "${TEMPLATE_MACHINE_NAME}")
 
 }
 
@@ -132,6 +135,23 @@ func createTempDirectory() string {
 
 	tmpDir = dir
 	return tmpDir
+}
+
+func replaceInTempFile(file string, old string, new string) {
+
+	var tempfile string = tmpDir + "/" + filepath.Base(file)
+
+	input, err := ioutil.ReadFile(tempfile)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	var output string = strings.ReplaceAll(string(input), old, new)
+
+	err = ioutil.WriteFile(tempfile, []byte(output), 0644)
+	if err != nil {
+		log.Fatalln(err)
+	}
 }
 
 func copy(src string) (int64, error) {
@@ -282,7 +302,7 @@ func createBucket() {
 func uploadFileToBucket(filename string) {
 	bucket := viper.GetString("machine-s3-bucket")
 
-	file, err := os.Open(filename)
+	file, err := os.Open(filename + ".tar.gz")
 	if err != nil {
 		exitErrorf("Unable to open file %q, %v", err)
 	}
