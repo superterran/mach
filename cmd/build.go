@@ -26,11 +26,12 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"html/template"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
-	"text/template"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -45,6 +46,8 @@ import (
 )
 
 var buildCmd = createBuildCmd()
+
+var testMode = false
 
 type ErrorLine struct {
 	Error       string      `json:"error"`
@@ -68,16 +71,30 @@ func createBuildCmd() *cobra.Command {
 	return cmd
 }
 
-// runHelloExt is the main function of `ext`.
+func init() {
+
+	rootCmd.AddCommand(buildCmd)
+
+	testMode = strings.HasSuffix(os.Args[0], ".test")
+
+	buildCmd.Flags().BoolP("no-push", "n", false, "Do not push to registry")
+	buildCmd.Flags().BoolP("output-only", "o", false, "send output to stdout, do not build")
+
+	viper.SetDefault("buildImageDirname", "./images")
+	viper.SetDefault("defaultGitBranch", "main")
+	viper.SetDefault("docker_host", "https://index.docker.io/v1/")
+
+}
+
 func runBuild(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		matches, _ := filepath.Glob(viper.GetString("buildImageDirname") + "/**/Dockerfile*")
 		for _, match := range matches {
-			var mach_tag string = buildImage(match, false)
+			var mach_tag string = buildImage(match)
 
 			fnopush, _ := cmd.Flags().GetBool("no-push")
 			if !fnopush {
-				pushImage(mach_tag, false)
+				pushImage(mach_tag)
 			}
 		}
 	} else {
@@ -93,11 +110,11 @@ func runBuild(cmd *cobra.Command, args []string) error {
 
 			matches, _ := filepath.Glob(viper.GetString("buildImageDirname") + "/" + image + "/Dockerfile" + variant + "*")
 			for _, match := range matches {
-				var mach_tag string = buildImage(match, false)
+				var mach_tag string = buildImage(match)
 
 				fnopush, _ := cmd.Flags().GetBool("no-push")
 				if !fnopush {
-					pushImage(mach_tag, false)
+					pushImage(mach_tag)
 				}
 			}
 		}
@@ -106,34 +123,27 @@ func runBuild(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func buildImage(filename string, testing bool) string {
+func generateTemplate(wr io.Writer, filename string) {
 
-	ctx := context.Background()
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	tpl, err := template.ParseGlob(filename)
 	if err != nil {
 		panic(err)
 	}
 
-	if err != nil {
-		log.Fatal(err)
-	}
+	tpl.ParseGlob(filepath.Dir(filename) + "/includes/*.tpl")
+	tpl.Execute(wr, filepath.Base(filename))
+
+}
+
+func getBranchVariant() string {
 
 	var variant string = ""
 
-	if strings.Contains(filepath.Base(filename), "-") {
-		variant = "-" + strings.Split(filepath.Base(filename), "-")[1]
-	}
-
-	variant = strings.Replace(variant, ".tpl", "", 1)
-
 	repo, err := git.PlainOpen(".")
 	if err != nil {
-		if !testing {
-			log.Fatal(err)
-		} else {
-			variant = "-" + "test_variant"
-		}
+		// log.Fatal(err)
 	} else {
+
 		head, err := repo.Head()
 		if err != nil {
 			log.Fatal(err)
@@ -144,7 +154,21 @@ func buildImage(filename string, testing bool) string {
 				variant = "-" + variant_branch
 			}
 		}
+
 	}
+
+	return variant
+}
+
+func buildImage(filename string) string {
+
+	var variant string = ""
+
+	if strings.Contains(filepath.Base(filename), "-") {
+		variant = "-" + strings.Split(filepath.Base(filename), "-")[1]
+	}
+
+	variant = strings.Replace(variant, ".tpl", "", 1) + getBranchVariant()
 
 	var mach_tag = viper.GetString("docker_registry") + ":" + filepath.Base(filepath.Dir(filename)) + variant
 
@@ -153,46 +177,51 @@ func buildImage(filename string, testing bool) string {
 	var DockerFilename string = filepath.Base(filename)
 
 	if filepath.Ext(filename) == ".tpl" {
-		tpl, err := template.ParseGlob(filename)
-		if err != nil {
-			panic(err)
-		}
-
-		tpl.ParseGlob(filepath.Dir(filename) + "/includes/*.tpl")
 
 		DockerFilename = "." + strings.TrimSuffix(filepath.Base(filename), ".tpl") + ".generated"
 
-		f, err := os.Create(filepath.Dir(filename) + "/" + DockerFilename)
+		if viper.GetBool("output-only") {
 
-		if err != nil {
-			panic(err)
+			generateTemplate(os.Stdout, filename)
+
+			return "ouput only mode"
+
+		} else {
+			f, err := os.Create(filepath.Dir(filename) + "/" + DockerFilename)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			generateTemplate(f, filename)
+
+			f.Close()
 		}
-
-		err = tpl.Execute(f, filepath.Base(filename))
-		if err != nil {
-			log.Print("execute: ", err)
-			return ""
-		}
-
-		f.Close()
 	}
+	if !testMode {
 
-	tar, err := archive.TarWithOptions(filepath.Dir(filename)+"/", &archive.TarOptions{})
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	opts := types.ImageBuildOptions{
-		Dockerfile: DockerFilename,
-		Remove:     true,
-		Tags:       []string{mach_tag},
-	}
-
-	res, err := cli.ImageBuild(ctx, tar, opts)
-	if !testing {
+		tar, err := archive.TarWithOptions(filepath.Dir(filename)+"/", &archive.TarOptions{})
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		opts := types.ImageBuildOptions{
+			Dockerfile: DockerFilename,
+			Remove:     true,
+			Tags:       []string{mach_tag},
+		}
+
+		ctx := context.Background()
+		cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		res, err := cli.ImageBuild(ctx, tar, opts)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		scanner := bufio.NewScanner(res.Body)
 		for scanner.Scan() {
 
@@ -214,10 +243,10 @@ func buildImage(filename string, testing bool) string {
 
 }
 
-func pushImage(mach_tag string, testing bool) string {
+func pushImage(mach_tag string) string {
 
-	if testing {
-		return "skipping push due to testing"
+	if testMode {
+		return "skipping push due to testMode"
 	}
 
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
@@ -256,17 +285,6 @@ func pushImage(mach_tag string, testing bool) string {
 	defer rd.Close()
 
 	return "push complete"
-}
-
-func init() {
-	rootCmd.AddCommand(buildCmd)
-
-	buildCmd.Flags().BoolP("no-push", "n", false, "Do not push to registry")
-
-	viper.SetDefault("buildImageDirname", "./images")
-	viper.SetDefault("defaultGitBranch", "main")
-	viper.SetDefault("docker_host", "https://index.docker.io/v1/")
-
 }
 
 func dockerLog(msg string) {

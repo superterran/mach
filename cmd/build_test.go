@@ -83,15 +83,15 @@ func Test_buildCmd_Help(t *testing.T) {
 
 func Test_BasicExampleBuild(t *testing.T) {
 	var expect = "skipping image build"
-	var actual = buildImage("images/example/Dockerfile", true)
+	var actual = buildImage("images/example/Dockerfile")
 	assert.Contains(t, actual, expect,
 		"buildImage method should get to end, skipping image build due to testing state",
 	)
 }
 
 func Test_BasicExamplePush(t *testing.T) {
-	var expect = "skipping push due to testing"
-	var actual = pushImage("example-variant", true)
+	var expect = "skipping push due to testMode"
+	var actual = pushImage("example-variant")
 	assert.Contains(t, actual, expect,
 		"pushImage method should get to end, skipping push due to testing state",
 	)
