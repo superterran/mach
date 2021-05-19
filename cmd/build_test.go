@@ -96,3 +96,43 @@ func Test_BasicExamplePush(t *testing.T) {
 		"pushImage method should get to end, skipping push due to testing state",
 	)
 }
+
+func Test_BranchVariant(t *testing.T) {
+	var expect = "-changeme"
+	var actual = getBranchVariant()
+	assert.Contains(t, actual, expect,
+		"branch variant should come back as -changeme",
+	)
+}
+
+func Test_GetTag(t *testing.T) {
+	var expect = "superterran/mach:example"
+	var actual = getTag("images/example/Dockerfile")
+	assert.Contains(t, actual, expect,
+		"tag should come back as superterran/mach:example",
+	)
+}
+
+func Test_GetTagWithVariant(t *testing.T) {
+	var expect = "superterran/mach:example-test"
+	var actual = getTag("images/example/Dockerfile-test")
+	assert.Contains(t, actual, expect,
+		"tag should come back as superterran/mach:example-test",
+	)
+}
+
+func Test_dockerLogStatus(t *testing.T) {
+	var expect = "Successfully built 6dbb9cc54074"
+	var actual = dockerLog("{\"stream\":\"Successfully built 6dbb9cc54074\n\"}")
+	assert.Contains(t, actual, expect,
+		"dockerLog method only contains json body",
+	)
+}
+
+func Test_dockerLogStrangeMessageInFull(t *testing.T) {
+	var expect = "blah"
+	var actual = dockerLog("blah")
+	assert.Contains(t, actual, expect,
+		"dockerLog method returns strange data as-is",
+	)
+}

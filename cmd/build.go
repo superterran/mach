@@ -84,6 +84,9 @@ func init() {
 	viper.SetDefault("defaultGitBranch", "main")
 	viper.SetDefault("docker_host", "https://index.docker.io/v1/")
 
+	if testMode {
+		viper.SetDefault("docker_registry", "superterran/mach")
+	}
 }
 
 func runBuild(cmd *cobra.Command, args []string) error {
@@ -137,30 +140,33 @@ func generateTemplate(wr io.Writer, filename string) {
 
 func getBranchVariant() string {
 
+	var branch = ""
 	var variant string = ""
 
 	repo, err := git.PlainOpen(".")
 	if err != nil {
-		// log.Fatal(err)
+		branch = "origin/refs/changeme"
 	} else {
 
 		head, err := repo.Head()
 		if err != nil {
 			log.Fatal(err)
 		}
-		if strings.Contains(head.String(), "/") {
-			var variant_branch string = strings.Split(head.String(), "/")[2]
-			if variant_branch != viper.GetString("defaultGitBranch") {
-				variant = "-" + variant_branch
-			}
-		}
 
+		branch = head.String()
+	}
+
+	if strings.Contains(branch, "/") {
+		var variant_branch string = strings.Split(branch, "/")[2]
+		if variant_branch != viper.GetString("defaultGitBranch") {
+			variant = "-" + variant_branch
+		}
 	}
 
 	return variant
 }
 
-func buildImage(filename string) string {
+func getVariant(filename string) string {
 
 	var variant string = ""
 
@@ -168,9 +174,17 @@ func buildImage(filename string) string {
 		variant = "-" + strings.Split(filepath.Base(filename), "-")[1]
 	}
 
-	variant = strings.Replace(variant, ".tpl", "", 1) + getBranchVariant()
+	return strings.Replace(variant, ".tpl", "", 1) + getBranchVariant()
 
-	var mach_tag = viper.GetString("docker_registry") + ":" + filepath.Base(filepath.Dir(filename)) + variant
+}
+
+func getTag(filename string) string {
+	return viper.GetString("docker_registry") + ":" + filepath.Base(filepath.Dir(filename)) + getVariant(filename)
+}
+
+func buildImage(filename string) string {
+
+	var mach_tag = getTag(filename)
 
 	color.HiYellow("Building image with tag " + mach_tag)
 
@@ -197,6 +211,7 @@ func buildImage(filename string) string {
 			f.Close()
 		}
 	}
+
 	if !testMode {
 
 		tar, err := archive.TarWithOptions(filepath.Dir(filename)+"/", &archive.TarOptions{})
@@ -287,22 +302,27 @@ func pushImage(mach_tag string) string {
 	return "push complete"
 }
 
-func dockerLog(msg string) {
+func dockerLog(msg string) string {
+
 	var result map[string]interface{}
 	json.Unmarshal([]byte(msg), &result)
 
 	for key, value := range result {
+
 		switch msgtype := key; msgtype {
 
 		case "status":
 			color.Yellow(value.(string))
+			return value.(string)
 		case "stream":
 			color.Blue(value.(string))
+			return value.(string)
 		case "aux":
 		case "errorDetail":
-			// do nothing
 		default:
-			color.White(msg)
+			return value.(string)
 		}
 	}
+
+	return msg
 }
