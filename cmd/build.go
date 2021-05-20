@@ -87,7 +87,7 @@ func init() {
 	buildCmd.Flags().BoolP("output-only", "o", false, "send output to stdout, do not build")
 	buildCmd.Flags().BoolP("first-only", "f", false, "breaks after processing first image if more than one")
 
-	viper.SetDefault("buildImageDirname", "./images")
+	viper.SetDefault("buildImageDirname", ".")
 	viper.SetDefault("defaultGitBranch", "main")
 	viper.SetDefault("docker_host", "https://index.docker.io/v1/")
 
