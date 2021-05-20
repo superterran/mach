@@ -290,6 +290,10 @@ func pushImage(mach_tag string) string {
 		return "skipping push due to testMode"
 	}
 
+	if nopush {
+		return "in no push mode, skipping"
+	}
+
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 
 	if err != nil {
