@@ -19,6 +19,8 @@ A cli application for using docker to *quickly* and *easily* manage infrastructu
 
 Mach provides tooling around a simple docker and docker-machine based workflow for managing infrastructure, services and docker images. This allows you to easily leverage any git repository for the purposes of managing your Infrastructure as Code. 
 
+This project is written in golang, using [cobra](https://github.com/spf13/cobra). Check the [wiki](https://github.com/superterran/mach/wiki) for additional documentation and user guides. 
+  
 ## Installation
 
 Mach is a simple command-line tool and only one executable. 
@@ -49,8 +51,6 @@ $ export AWS_DEFAULT_REGION=us-west-2
 
 Maintain a collection of docker images that can be rapidly [built and pushed](https://github.com/superterran/mach/wiki/Build-Command) to a registry. Dockerfiles can be made using templates supporting includes, conditionals, loops, etc. `mach build` can build these images, and tag them based on git branch and filename conventions. This allows for maintaining a mainline image for public use, and versions for test. 
 
-This project is written in golang, using [cobra](https://github.com/spf13/cobra). Check the [wiki](https://github.com/superterran/mach/wiki) for additional documentation and user guides. 
-  
 # Contributing
 
 For a complete guide to contributing to Mach, see the [Contribution Guide](CONTRIBUTING.md)
