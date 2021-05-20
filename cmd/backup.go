@@ -93,6 +93,8 @@ func runBackup(cmd *cobra.Command, args []string) error {
 			removeMachineArchive(args[0])
 		}
 
+		fmt.Println(args[0] + " backup complete to " + viper.GetString("machine-s3-bucket") + " bucket")
+
 	}
 
 	return nil
@@ -147,8 +149,6 @@ func replaceInTempFile(file string, old string, new string) {
 
 func copy(src string) (int64, error) {
 
-	fmt.Println(src)
-
 	sourceFileStat, err := os.Stat(src)
 	if err != nil {
 		return 0, err
@@ -198,8 +198,6 @@ func createMachineTarball(machine string) {
 	if err != nil {
 		log.Fatalln("Error creating archive:", err)
 	}
-
-	fmt.Println("Archive created successfully")
 }
 
 func createArchive(files []string, buf io.Writer) error {
@@ -323,8 +321,6 @@ func uploadFileToBucket(machine string) {
 		// Print the error and exit.
 		exitErrorf("Unable to upload %q to %q, %v", filename, bucket, err)
 	}
-
-	fmt.Printf("Successfully uploaded %q to %q\n", filename, bucket)
 }
 
 func exitErrorf(msg string, args ...interface{}) {

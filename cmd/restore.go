@@ -84,6 +84,8 @@ func runRestore(cmd *cobra.Command, args []string) error {
 			removeMachineArchive(args[0])
 		}
 
+		fmt.Println(args[0] + " restore complete from " + viper.GetString("machine-s3-bucket") + " bucket")
+
 	}
 
 	return nil
@@ -114,10 +116,10 @@ func downloadFromS3(machine string) {
 			Key:    aws.String(item),
 		})
 	if err != nil {
+		fmt.Println("Failed to download", file.Name(), numBytes, "bytes")
 		log.Fatal(err)
 	}
 
-	fmt.Println("Downloaded", file.Name(), numBytes, "bytes")
 }
 
 func extractTarball(machine string) {
