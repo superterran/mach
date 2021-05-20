@@ -34,13 +34,23 @@ git clone git@github.com:superterran/mach.git
 cd mach
 make install # runs `go build .` and copies to /usr/local/bin
 ```
+## Managing Docker Machines
+
+Mach can be used to backup docker-machine certificates and configurations to Amazon S3 buckets. This make sharing docker-machine credentials with teammates (and pipelines) very simple, as you just need to create AWS credentials that can transfer to or from the bucket. 
+
+AWS authentication is performed through the golang library, which provides a variety of ways to authenticate. You can use a tool like `aws-vault`, `~/.aws/credentials` files or environment variables such as:
+
+```
+$ export AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
+$ export AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+$ export AWS_DEFAULT_REGION=us-west-2
+```
 ## Building Docker Images
 
 Maintain a collection of docker images that can rapidly [built and pushed](https://github.com/superterran/mach/wiki/Build-Command) to a registry. Dockerfiles can be made using templates supporting includes, conditionals, loops, etc. `mach build` can build these images, and tag them based on git branch and filename conventions. This allows for maintaining a mainline image for public use, and versions for test. 
 
 written in golang, using [cobra](https://github.com/spf13/cobra). Check the [wiki](https://github.com/superterran/mach/wiki) for additional documentation. 
   
-
 # Contributing
 
 For a complete guide to contributing to Mach, see the [Contribution Guide](CONTRIBUTING.md)
