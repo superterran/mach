@@ -48,8 +48,7 @@ func createBackupCmd() *cobra.Command {
 		Short: "Takes a working docker-machine entry and stores it to an S3 bucket",
 		Long: `This allows you to store the docker-machine certs bundle in an S3 bucket, 
 paired with restore command, this will let you transfer docker-machines to and from
-systems using the AWS API. Will require progamtic credetials with permissions to upload
-to S3.`,
+systems using the AWS API. Will require programmatic credentials with permissions to download from S`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runBackup(cmd, args)
 		},
