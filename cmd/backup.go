@@ -42,8 +42,6 @@ import (
 
 var backupCmd = createBackupCmd()
 
-var tmpDir = ""
-
 func createBackupCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "backup <docker-machine>",
@@ -82,7 +80,6 @@ func runBackup(cmd *cobra.Command, args []string) error {
 	if len(args) == 1 {
 		createTempDirectory()
 		populateTempDir(args[0])
-		transformFilesInTemp(args[0])
 		createMachineTarball(args[0])
 		uploadFileToBucket(args[0])
 
@@ -90,10 +87,6 @@ func runBackup(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
-}
-
-func transformFilesInTemp(machine string) {
-
 }
 
 func populateTempDir(machine string) {
@@ -125,16 +118,6 @@ func populateTempDir(machine string) {
 	replaceInTempFile(config, homedir, "${TEMPLATE_HOME_DIR}")
 	replaceInTempFile(config, machine, "${TEMPLATE_MACHINE_NAME}")
 
-}
-
-func createTempDirectory() string {
-	dir, err := ioutil.TempDir("/tmp", "machine")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	tmpDir = dir
-	return tmpDir
 }
 
 func replaceInTempFile(file string, old string, new string) {
@@ -279,6 +262,9 @@ func createBucket() {
 	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String(viper.GetString("machine-s3-region"))},
 	)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Create S3 service client
 	svc := s3.New(sess)
@@ -299,10 +285,12 @@ func createBucket() {
 
 }
 
-func uploadFileToBucket(filename string) {
+func uploadFileToBucket(machine string) {
 	bucket := viper.GetString("machine-s3-bucket")
 
-	file, err := os.Open(filename + ".tar.gz")
+	var filename = machine + ".tar.gz"
+
+	file, err := os.Open(filename)
 	if err != nil {
 		exitErrorf("Unable to open file %q, %v", err)
 	}
@@ -312,6 +300,9 @@ func uploadFileToBucket(filename string) {
 	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String(viper.GetString("machine-s3-region"))},
 	)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	uploader := s3manager.NewUploader(sess)
 

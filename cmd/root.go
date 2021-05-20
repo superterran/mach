@@ -23,6 +23,8 @@ package cmd
 
 import (
 	"fmt"
+	"io/ioutil"
+	"log"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -32,6 +34,8 @@ import (
 )
 
 var cfgFile string
+
+var tmpDir = ""
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -94,4 +98,14 @@ func initConfig() {
 	// if err := viper.ReadInConfig(); err == nil {
 	// 	fmt.Println("Using config file:", viper.ConfigFileUsed())
 	// }
+}
+
+func createTempDirectory() string {
+	dir, err := ioutil.TempDir("/tmp", "machine")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	tmpDir = dir
+	return tmpDir
 }
