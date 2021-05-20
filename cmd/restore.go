@@ -63,6 +63,7 @@ func init() {
 
 	viper.SetDefault("machine-s3-bucket", "mach-docker-machine-certificates")
 	viper.SetDefault("machine-s3-region", "us-east-1")
+	restoreCmd.Flags().BoolP("keep-tarball", "k", false, "keeps the tarball in working directory after upload")
 
 }
 
@@ -76,6 +77,12 @@ func runRestore(cmd *cobra.Command, args []string) error {
 		populateMachineDir(args[0])
 
 		defer os.RemoveAll(tmpDir)
+
+		keepTarball, _ := cmd.Flags().GetBool("keep-tarball")
+
+		if !keepTarball {
+			removeMachineArchive(args[0])
+		}
 
 	}
 

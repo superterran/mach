@@ -109,3 +109,10 @@ func createTempDirectory() string {
 	tmpDir = dir
 	return tmpDir
 }
+
+func removeMachineArchive(machine string) {
+	e := os.Remove(machine + ".tar.gz")
+	if e != nil {
+		log.Fatal(e)
+	}
+}

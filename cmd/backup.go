@@ -67,6 +67,8 @@ func init() {
 
 	backupCmd.Flags().BoolP("create", "c", false, "create the bucket before attempting backup")
 
+	backupCmd.Flags().BoolP("keep-tarball", "k", false, "keeps the tarball in working directory after upload")
+
 }
 
 func runBackup(cmd *cobra.Command, args []string) error {
@@ -84,6 +86,13 @@ func runBackup(cmd *cobra.Command, args []string) error {
 		uploadFileToBucket(args[0])
 
 		defer os.RemoveAll(tmpDir)
+
+		keepTarball, _ := cmd.Flags().GetBool("keep-tarball")
+
+		if !keepTarball {
+			removeMachineArchive(args[0])
+		}
+
 	}
 
 	return nil
