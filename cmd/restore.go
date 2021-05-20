@@ -75,7 +75,7 @@ func runRestore(cmd *cobra.Command, args []string) error {
 		extractTarball(args[0])
 		populateMachineDir(args[0])
 
-		// defer os.RemoveAll(tmpDir)
+		defer os.RemoveAll(tmpDir)
 
 	}
 
