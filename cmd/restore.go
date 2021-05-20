@@ -124,7 +124,7 @@ func extractTarball(machine string) {
 	if err != nil {
 		fmt.Println(err)
 
-		log.Fatal("ExtractTarGz: NewReader failed")
+		log.Fatal("tarball: NewReader failed")
 	}
 
 	tarReader := tar.NewReader(uncompressedStream)
@@ -137,26 +137,26 @@ func extractTarball(machine string) {
 		}
 
 		if err != nil {
-			log.Fatalf("ExtractTarGz: Next() failed: %s", err.Error())
+			log.Fatalf("tarball: Next() failed: %s", err.Error())
 		}
 
 		switch header.Typeflag {
 		case tar.TypeDir:
 			if err := os.Mkdir(header.Name, 0755); err != nil {
-				log.Fatalf("ExtractTarGz: Mkdir() failed: %s", err.Error())
+				log.Fatalf("tarball: Mkdir() failed: %s", err.Error())
 			}
 		case tar.TypeReg:
 			outFile, err := os.Create(tmpDir + "/" + filepath.Base(header.Name))
 			if err != nil {
-				log.Fatalf("ExtractTarGz: Create() failed: %s", err.Error())
+				log.Fatalf("tarball: Create() failed: %s", err.Error())
 			}
 			if _, err := io.Copy(outFile, tarReader); err != nil {
-				log.Fatalf("ExtractTarGz: Copy() failed: %s", err.Error())
+				log.Fatalf("tarball: Copy() failed: %s", err.Error())
 			}
 			outFile.Close()
 
 		default:
-			log.Fatalf("ExtractTarGz: uknown type: %s in %s", header.Typeflag, header.Name)
+			log.Fatalf("tarball: uknown type: %s in %s", header.Typeflag, header.Name)
 		}
 
 	}
@@ -169,7 +169,6 @@ func populateMachineDir(machine string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(homedir)
 
 	var machinedir = homedir + "/.docker/machine/machines/" + machine + "/"
 	var certsdir = homedir + "/.docker/machine/certs/"
@@ -214,11 +213,7 @@ func replaceInMachineFile(file string, new string, old string) {
 
 func copyTo(dest string) (int64, error) {
 
-	fmt.Println(dest)
-
 	var src string = tmpDir + "/" + filepath.Base(dest)
-
-	fmt.Println(src)
 
 	sourceFileStat, err := os.Stat(src)
 	if err != nil {
