@@ -163,9 +163,6 @@ func extractTarball(machine string) {
 				log.Fatalf("tarball: Copy() failed: %s", err.Error())
 			}
 			outFile.Close()
-
-		default:
-			log.Fatalf("tarball: uknown type: %s in %s", header.Typeflag, header.Name)
 		}
 
 	}
