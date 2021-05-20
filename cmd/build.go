@@ -53,6 +53,8 @@ var outputOnly = false
 
 var firstOnly = false
 
+var nopush bool = false
+
 type ErrorLine struct {
 	Error       string      `json:"error"`
 	ErrorDetail ErrorDetail `json:"errorDetail"`
@@ -103,6 +105,7 @@ func runBuild(cmd *cobra.Command, args []string) error {
 	}
 
 	fnopush, _ := cmd.Flags().GetBool("no-push")
+	nopush = fnopush
 
 	firstOnly, _ := cmd.Flags().GetBool("first-only")
 
@@ -110,7 +113,7 @@ func runBuild(cmd *cobra.Command, args []string) error {
 		matches, _ := filepath.Glob(viper.GetString("buildImageDirname") + "/**/Dockerfile*")
 		for _, match := range matches {
 			var mach_tag string = buildImage(match)
-			if !fnopush || outputonly {
+			if !nopush || outputonly {
 				pushImage(mach_tag)
 			}
 
@@ -200,7 +203,16 @@ func getVariant(filename string) string {
 }
 
 func getTag(filename string) string {
-	return viper.GetString("docker_registry") + ":" + filepath.Base(filepath.Dir(filename)) + getVariant(filename)
+
+	var tag string = filepath.Base(filepath.Dir(filename)) + getVariant(filename)
+
+	if viper.GetString("docker_registry") != "" {
+		return viper.GetString("docker_registry") + ":" + tag
+	} else {
+		nopush = true
+		return tag
+	}
+
 }
 
 func buildImage(filename string) string {
