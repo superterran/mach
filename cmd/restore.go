@@ -75,7 +75,7 @@ func runRestore(cmd *cobra.Command, args []string) error {
 		extractTarball(args[0])
 		populateMachineDir(args[0])
 
-		defer os.RemoveAll(tmpDir)
+		// defer os.RemoveAll(tmpDir)
 
 	}
 
@@ -172,7 +172,10 @@ func populateMachineDir(machine string) {
 	fmt.Println(homedir)
 
 	var machinedir = homedir + "/.docker/machine/machines/" + machine + "/"
-	var certsdir = homedir + ".docker/machine/certs/"
+	var certsdir = homedir + "/.docker/machine/certs/"
+
+	os.Mkdir(machinedir, 0755)
+	os.Mkdir(certsdir, 0755)
 
 	copyTo(machinedir + "ca.pem")
 	copyTo(machinedir + "cert.pem")
@@ -209,7 +212,11 @@ func replaceInMachineFile(file string, new string, old string) {
 	}
 }
 
-func copyTo(src string) (int64, error) {
+func copyTo(dest string) (int64, error) {
+
+	fmt.Println(dest)
+
+	var src string = tmpDir + "/" + filepath.Base(dest)
 
 	fmt.Println(src)
 
@@ -219,20 +226,23 @@ func copyTo(src string) (int64, error) {
 	}
 
 	if !sourceFileStat.Mode().IsRegular() {
-		return 0, fmt.Errorf("%s is not a regular file", src)
+		return 0, fmt.Errorf("%s is not a regular file", dest)
 	}
 
-	source, err := os.Open(tmpDir + "/" + filepath.Base(src))
+	source, err := os.Open(src)
 	if err != nil {
 		return 0, err
 	}
 	defer source.Close()
 
-	destination, err := os.Create(src)
+	destination, err := os.Create(dest)
 	if err != nil {
 		return 0, err
 	}
 	defer destination.Close()
 	nBytes, err := io.Copy(destination, source)
+	if err != nil {
+		return 0, err
+	}
 	return nBytes, err
 }

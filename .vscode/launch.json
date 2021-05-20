@@ -10,7 +10,7 @@
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}/main.go",
-            "args": ["backup", "auto-sandbox"]
+            "args": ["restore", "auto-sandbox"]
         }
     ]
 }

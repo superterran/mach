@@ -98,7 +98,7 @@ func populateTempDir(machine string) {
 	fmt.Println(homedir)
 
 	var machinedir = homedir + "/.docker/machine/machines/" + machine + "/"
-	var certsdir = homedir + ".docker/machine/certs/"
+	var certsdir = homedir + "/.docker/machine/certs/"
 
 	copy(machinedir + "ca.pem")
 	copy(machinedir + "cert.pem")
