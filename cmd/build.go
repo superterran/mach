@@ -1,16 +1,18 @@
 /*
-build command generates docker images, using templates, and pushes them to registries. This provides a useful
+The build command generates docker images, using templates, and pushes them to registries. This provides a useful
 method to rapidly build images with variants, and manage them in a git repository. Dockerfiles can be made
 supporting includes, conditionals, loops, etc.
 
 Each image should get it's own directory in the images directory, by default the current working dir. If mach
 build is ran with no arguments, it will try to build every image discovered.
 
-* images/<image_name>/Dockerfile is the default image to be built, this is a proper Dockerfile and should not
+- images/<image_name>/Dockerfile is the default image to be built, this is a proper Dockerfile and should not
   use the templating system.
-* images/<image_name>/Dockerfile-<variant> The variant can be used to build alternate images, when pushed to
+
+- images/<image_name>/Dockerfile-<variant> The variant can be used to build alternate images, when pushed to
   the registry the variant is appended to the image name.
-* images/<image_name>/Dockerfile[-<variant>].tpl using the .tpl will process through the templating engine. This
+
+- images/<image_name>/Dockerfile[-<variant>].tpl using the .tpl will process through the templating engine. This
   allows for including partial templates.
 */
 package cmd
@@ -79,14 +81,14 @@ func init() {
 
 	testMode = strings.HasSuffix(os.Args[0], ".test")
 
-	// no-push flag prevents pushing to the docker registry, good for testing locally
+	/* no-push flag prevents pushing to the docker registry, good for testing locally */
 	buildCmd.Flags().BoolP("no-push", "n", false, "Do not push to registry")
 
-	// output-only does not build the image, just outputs the template to stdout
+	/* output-only does not build the image, just outputs the template to stdout */
 	buildCmd.Flags().BoolP("output-only", "o", false, "send output to stdout, do not build")
 
-	// first-only will stop after processing the first image if more than one image is matched. Good to pair with output-only
-	// if you intend to pipe output to a file
+	/* first-only will stop after processing the first image if more than one image is matched. Good to pair with output-only
+	   if you intend to pipe output to a file */
 	buildCmd.Flags().BoolP("first-only", "f", false, "breaks after processing first image if more than one")
 
 	// buildImageDirname tells the tool which directory to itereate through to find Dockerfiles. defaults the present working
@@ -107,10 +109,10 @@ func init() {
 	}
 }
 
-// runBuild is the main flow for the build command. If no arguments are present, it will each through
-// the images directory and attempt to build every file matching the pattern `Dockerfile*`. If arguements are passed
-// it will attempt to match the strings with dockerfiles and build those only. This method sets several flags,
-// outputOnly is suitable for leveraging the stdout which provides the contents of a templated dockerfile.
+/* runBuild is the main flow for the build command. If no arguments are present, it will each through
+the images directory and attempt to build every file matching the pattern `Dockerfile*`. If arguements are passed
+it will attempt to match the strings with dockerfiles and build those only. This method sets several flags, outputOnly
+is suitable for leveraging the stdout which provides the contents of a templated dockerfile. */
 func runBuild(cmd *cobra.Command, args []string) error {
 
 	outputonly, _ := cmd.Flags().GetBool("output-only")
