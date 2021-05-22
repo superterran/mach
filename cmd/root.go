@@ -2,19 +2,17 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
-	"log"
 	"os"
 
-	"github.com/spf13/cobra"
-
 	homedir "github.com/mitchellh/go-homedir"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/superterran/mach/cmd/backup"
+	"github.com/superterran/mach/cmd/build"
+	"github.com/superterran/mach/cmd/restore"
 )
 
 var cfgFile string
-
-var tmpDir = ""
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -50,6 +48,10 @@ func init() {
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
+	rootCmd.AddCommand(build.CreateBuildCmd())
+	rootCmd.AddCommand(backup.CreateBackupCmd())
+	rootCmd.AddCommand(restore.CreateRestoreCmd())
+
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -77,21 +79,4 @@ func initConfig() {
 	// if err := viper.ReadInConfig(); err == nil {
 	// 	fmt.Println("Using config file:", viper.ConfigFileUsed())
 	// }
-}
-
-func createTempDirectory() string {
-	dir, err := ioutil.TempDir("/tmp", "machine")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	tmpDir = dir
-	return tmpDir
-}
-
-func removeMachineArchive(machine string) {
-	e := os.Remove(machine + ".tar.gz")
-	if e != nil {
-		log.Fatal(e)
-	}
 }

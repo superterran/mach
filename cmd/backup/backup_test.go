@@ -1,4 +1,4 @@
-package cmd
+package backup
 
 /* https://github.com/KEINOS/Hello-Cobra */
 
@@ -11,7 +11,7 @@ import (
 
 func Test_backupCmd(t *testing.T) {
 	var (
-		backupCmd = createBackupCmd()
+		backupCmd = CreateBackupCmd()
 		argsTmp   = []string{}
 		buffTmp   = new(bytes.Buffer)
 
@@ -36,7 +36,7 @@ func Test_backupCmd(t *testing.T) {
 
 func Test_backupCmd_Help(t *testing.T) {
 	var (
-		backupCmd = createBackupCmd()
+		backupCmd = CreateBackupCmd()
 		argsTmp   = []string{"--help"}
 		buffTmp   = new(bytes.Buffer)
 

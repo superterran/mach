@@ -1,4 +1,4 @@
-package cmd
+package restore
 
 import (
 	"archive/tar"
@@ -19,9 +19,13 @@ import (
 	"github.com/spf13/viper"
 )
 
-var restoreCmd = createRestoreCmd()
+var tmpDir = ""
 
-func createRestoreCmd() *cobra.Command {
+var testMode = false
+
+var restoreCmd = CreateRestoreCmd()
+
+func CreateRestoreCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "restore <docker-machine>",
 		Short: "Restores a docker-machine tarball from S3 to this machine for use.",
@@ -37,7 +41,6 @@ systems using the AWS API. Will require progamtic credetials with permissions to
 
 func init() {
 
-	rootCmd.AddCommand(restoreCmd)
 	testMode = strings.HasSuffix(os.Args[0], ".test")
 
 	viper.SetDefault("machine-s3-bucket", "mach-docker-machine-certificates")
@@ -225,4 +228,21 @@ func copyTo(dest string) (int64, error) {
 		return 0, err
 	}
 	return nBytes, err
+}
+
+func createTempDirectory() string {
+	dir, err := ioutil.TempDir("/tmp", "machine")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	tmpDir = dir
+	return tmpDir
+}
+
+func removeMachineArchive(machine string) {
+	e := os.Remove(machine + ".tar.gz")
+	if e != nil {
+		log.Fatal(e)
+	}
 }

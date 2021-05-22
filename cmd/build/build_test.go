@@ -1,4 +1,4 @@
-package cmd
+package build
 
 /* https://github.com/KEINOS/Hello-Cobra */
 
@@ -11,7 +11,7 @@ import (
 
 func Test_buildCmd(t *testing.T) {
 	var (
-		buildCmd = createBuildCmd()
+		buildCmd = CreateBuildCmd()
 		argsTmp  = []string{}
 		buffTmp  = new(bytes.Buffer)
 
@@ -36,7 +36,7 @@ func Test_buildCmd(t *testing.T) {
 
 func Test_buildCmd_Help(t *testing.T) {
 	var (
-		buildCmd = createBuildCmd()
+		buildCmd = CreateBuildCmd()
 		argsTmp  = []string{"--help"}
 		buffTmp  = new(bytes.Buffer)
 

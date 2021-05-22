@@ -15,7 +15,7 @@ the registry the variant is appended to the image name.
 images/<image_name>/Dockerfile[-<variant>].tpl using the .tpl will process through the templating engine. This
 allows for including partial templates.
 */
-package cmd
+package build
 
 import (
 	"bufio"
@@ -41,7 +41,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var buildCmd = createBuildCmd()
+var buildCmd = CreateBuildCmd()
 
 var testMode = false
 
@@ -62,7 +62,7 @@ type ErrorDetail struct {
 	Message string `json:"message"`
 }
 
-func createBuildCmd() *cobra.Command {
+func CreateBuildCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "build [docker-image[:tag]]",
 		Short: "Builds a directory of docker images and pushes them to a registry",
@@ -76,8 +76,6 @@ func createBuildCmd() *cobra.Command {
 }
 
 func init() {
-
-	rootCmd.AddCommand(buildCmd)
 
 	testMode = strings.HasSuffix(os.Args[0], ".test")
 

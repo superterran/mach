@@ -1,4 +1,4 @@
-package cmd
+package restore
 
 /* https://github.com/KEINOS/Hello-Cobra */
 
@@ -11,7 +11,7 @@ import (
 
 func Test_restoreCmd(t *testing.T) {
 	var (
-		restoreCmd = createRestoreCmd()
+		restoreCmd = CreateRestoreCmd()
 		argsTmp    = []string{}
 		buffTmp    = new(bytes.Buffer)
 
@@ -36,7 +36,7 @@ func Test_restoreCmd(t *testing.T) {
 
 func Test_restoreCmd_Help(t *testing.T) {
 	var (
-		restoreCmd = createRestoreCmd()
+		restoreCmd = CreateRestoreCmd()
 		argsTmp    = []string{"--help"}
 		buffTmp    = new(bytes.Buffer)
 

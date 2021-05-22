@@ -1,9 +1,9 @@
 /*
-Backup command creates a tarball containing the configs and credentials for
+Backup package creates a tarball containing the configs and credentials for
 a given docker-machine and stores it to S3. This command also modifies the
 configuration for portibility.
 */
-package cmd
+package backup
 
 import (
 	"archive/tar"
@@ -24,9 +24,13 @@ import (
 	"github.com/spf13/viper"
 )
 
-var backupCmd = createBackupCmd()
+var backupCmd = CreateBackupCmd()
 
-func createBackupCmd() *cobra.Command {
+var tmpDir = ""
+
+var testMode = false
+
+func CreateBackupCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "backup <docker-machine>",
 		Short: "Takes a working docker-machine entry and stores it to an S3 bucket",
@@ -42,7 +46,6 @@ systems using the AWS API. Will require programmatic credentials with permission
 
 func init() {
 
-	rootCmd.AddCommand(backupCmd)
 	testMode = strings.HasSuffix(os.Args[0], ".test")
 
 	viper.SetDefault("machine-s3-bucket", "mach-docker-machine-certificates")
@@ -321,4 +324,21 @@ func uploadFileToBucket(machine string) {
 func exitErrorf(msg string, args ...interface{}) {
 	fmt.Fprintf(os.Stderr, msg+"\n", args...)
 	os.Exit(1)
+}
+
+func createTempDirectory() string {
+	dir, err := ioutil.TempDir("/tmp", "machine")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	tmpDir = dir
+	return tmpDir
+}
+
+func removeMachineArchive(machine string) {
+	e := os.Remove(machine + ".tar.gz")
+	if e != nil {
+		log.Fatal(e)
+	}
 }
