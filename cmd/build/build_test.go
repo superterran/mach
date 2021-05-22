@@ -60,7 +60,7 @@ func Test_buildCmd_Help(t *testing.T) {
 }
 
 func Test_BasicExamplePush(t *testing.T) {
-	var expect = "skipping push due to testMode"
+	var expect = "skipping push due to TestMode"
 	var actual = pushImage("example-variant")
 	assert.Contains(t, actual, expect,
 		"pushImage method should get to end, skipping push due to testing state",

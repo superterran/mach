@@ -28,7 +28,7 @@ var backupCmd = CreateBackupCmd()
 
 var tmpDir = ""
 
-var testMode = false
+var TestMode = false
 
 func CreateBackupCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -46,7 +46,7 @@ systems using the AWS API. Will require programmatic credentials with permission
 
 func init() {
 
-	testMode = strings.HasSuffix(os.Args[0], ".test")
+	TestMode = strings.HasSuffix(os.Args[0], ".test")
 
 	viper.SetDefault("machine-s3-bucket", "mach-docker-machine-certificates")
 	viper.SetDefault("machine-s3-region", "us-east-1")

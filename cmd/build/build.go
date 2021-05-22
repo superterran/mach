@@ -43,13 +43,13 @@ import (
 
 var buildCmd = CreateBuildCmd()
 
-var testMode = false
+var TestMode = false
 
-var outputOnly = false
+var OutputOnly = false
 
-var firstOnly = false
+var FirstOnly = false
 
-var nopush bool = false
+var Nopush bool = false
 
 var lastOutput = "begin"
 
@@ -77,7 +77,7 @@ func CreateBuildCmd() *cobra.Command {
 
 func init() {
 
-	testMode = strings.HasSuffix(os.Args[0], ".test")
+	TestMode = strings.HasSuffix(os.Args[0], ".test")
 
 	// no-push flag prevents pushing to the docker registry, good for testing locally
 	buildCmd.Flags().BoolP("no-push", "n", false, "Do not push to registry")
@@ -101,7 +101,7 @@ func init() {
 	// to any registry you like.
 	viper.SetDefault("docker_host", "https://index.docker.io/v1/")
 
-	if testMode {
+	if TestMode {
 		// docker_registry is the package name inside the docker registry. @todo think through a better name
 		viper.SetDefault("docker_registry", "superterran/mach")
 	}
@@ -110,29 +110,28 @@ func init() {
 // runBuild is the main flow for the build command. If no arguments are present, it will each through
 // the images directory and attempt to build every file matching the pattern `Dockerfile*`. If arguements are passed
 // it will attempt to match the strings with dockerfiles and build those only. This method sets several flags,
-// outputOnly is suitable for leveraging the stdout which provides the contents of a templated dockerfile.
+// OutputOnly is suitable for leveraging the stdout which provides the contents of a templated dockerfile.
 func runBuild(cmd *cobra.Command, args []string) error {
 
-	outputonly, _ := cmd.Flags().GetBool("output-only")
-	if outputonly {
-		testMode = true
-		outputOnly = true
+	OutputOnly, _ := cmd.Flags().GetBool("output-only")
+	if OutputOnly {
+		TestMode = true
+		OutputOnly = true
 	}
 
-	fnopush, _ := cmd.Flags().GetBool("no-push")
-	nopush = fnopush
+	Nopush, _ := cmd.Flags().GetBool("no-push")
 
-	firstOnly, _ := cmd.Flags().GetBool("first-only")
+	FirstOnly, _ := cmd.Flags().GetBool("first-only")
 
 	if len(args) < 1 {
 		matches, _ := filepath.Glob(viper.GetString("buildImageDirname") + "/**/Dockerfile*")
 		for _, match := range matches {
 			var mach_tag string = buildImage(match)
-			if !nopush || outputonly {
+			if !Nopush || OutputOnly {
 				pushImage(mach_tag)
 			}
 
-			if firstOnly {
+			if FirstOnly {
 				break
 			}
 		}
@@ -151,11 +150,11 @@ func runBuild(cmd *cobra.Command, args []string) error {
 			for _, match := range matches {
 				var mach_tag string = buildImage(match)
 
-				if !fnopush || outputonly {
+				if !Nopush || OutputOnly {
 					pushImage(mach_tag)
 				}
 
-				if firstOnly {
+				if FirstOnly {
 					break
 				}
 			}
@@ -193,7 +192,7 @@ func getTag(filename string) string {
 	if viper.GetString("docker_registry") != "" {
 		return viper.GetString("docker_registry") + ":" + tag
 	} else {
-		nopush = true
+		Nopush = true
 		return tag
 	}
 
@@ -251,13 +250,13 @@ func buildImage(filename string) string {
 
 	var mach_tag = getTag(filename)
 
-	if !outputOnly {
+	if !OutputOnly {
 		color.HiYellow("Building image with tag " + mach_tag)
 	}
 
 	var DockerFilename string = filepath.Dir(filename) + "/." + filepath.Base(filename) + ".generated"
 
-	if outputOnly || testMode {
+	if OutputOnly || TestMode {
 
 		generateTemplate(os.Stdout, filename)
 		return mach_tag
@@ -273,7 +272,7 @@ func buildImage(filename string) string {
 		f.Close()
 	}
 
-	if !testMode {
+	if !TestMode {
 		tar, err := archive.TarWithOptions(filepath.Dir(DockerFilename), &archive.TarOptions{})
 		if err != nil {
 			log.Fatal(err)
@@ -322,14 +321,14 @@ func buildImage(filename string) string {
 }
 
 // pushImage takes the current tag and pushes it to the configured registry. This fuction short-circuits
-// if testMode or nopush are true.
+// if TestMode or Nopush are true.
 func pushImage(mach_tag string) string {
 
-	if testMode {
-		return "skipping push due to testMode"
+	if TestMode {
+		return "skipping push due to TestMode"
 	}
 
-	if nopush {
+	if Nopush {
 		return "in no push mode, skipping"
 	}
 

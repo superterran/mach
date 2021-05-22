@@ -21,7 +21,7 @@ import (
 
 var tmpDir = ""
 
-var testMode = false
+var TestMode = false
 
 var restoreCmd = CreateRestoreCmd()
 
@@ -41,7 +41,7 @@ systems using the AWS API. Will require progamtic credetials with permissions to
 
 func init() {
 
-	testMode = strings.HasSuffix(os.Args[0], ".test")
+	TestMode = strings.HasSuffix(os.Args[0], ".test")
 
 	viper.SetDefault("machine-s3-bucket", "mach-docker-machine-certificates")
 	viper.SetDefault("machine-s3-region", "us-east-1")
