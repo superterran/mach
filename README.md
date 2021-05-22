@@ -7,21 +7,18 @@
 [Installation Guide](https://github.com/superterran/mach/wiki/Installation) |
 [Contribution Guide](CONTRIBUTING.md)
 
-A cli application for using docker to *quickly* and *easily* manage infrastructure and services through code.
+Mach is a cli application for using docker to *quickly* and *easily* manage infrastructure and services through code.
 
 [![GoDoc](https://godoc.org/github.com/gohugoio/hugo?status.svg)](https://pkg.go.dev/github.com/superterran/mach)
 [![Go](https://github.com/superterran/mach/actions/workflows/go.yml/badge.svg?branch=main)](https://github.com/superterran/mach/actions/workflows/go.yml) 
 [![Go Report Card](https://goreportcard.com/badge/github.com/superterran/mach)](https://goreportcard.com/report/github.com/superterran/mach)
 [![codecov](https://codecov.io/gh/superterran/mach/branch/main/graph/badge.svg?token=S48U2MJP9I)](https://codecov.io/gh/superterran/mach)
 
-
-# Overview
-
 Mach provides tooling around a simple docker and docker-machine based workflow for managing infrastructure, services and docker images. This allows you to easily leverage any git repository for the purposes of managing your Infrastructure as Code. 
 
 This project is written in golang, using [cobra](https://github.com/spf13/cobra). Check the [wiki](https://github.com/superterran/mach/wiki) for additional documentation and user guides. 
   
-## Installation
+# Installation
 
 Mach is a simple command-line tool and only one executable. 
 

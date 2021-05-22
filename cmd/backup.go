@@ -1,6 +1,8 @@
 /*
-
- */
+Backup command creates a tarball containing the configs and credentials for
+a given docker-machine and stores it to S3. This command also modifies the
+configuration for portibility.
+*/
 package cmd
 
 import (
@@ -52,6 +54,9 @@ func init() {
 
 }
 
+// runBackup is the main command flow, it will attempt to create an S3 bucket if
+// the flag is set, then it will create a temp directory, populate it with the
+// machine config, tarball it, and push to S3, and delete the temp files created
 func runBackup(cmd *cobra.Command, args []string) error {
 
 	createFirst, _ := cmd.Flags().GetBool("create")
@@ -81,6 +86,8 @@ func runBackup(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// populateTempDir copies the relevant files from ~/.docker/machine/ to the tmp directory and
+// triggers replaceIntTempFile
 func populateTempDir(machine string) {
 
 	homedir, err := os.UserHomeDir()
@@ -111,6 +118,8 @@ func populateTempDir(machine string) {
 
 }
 
+// replaceInTempFile performs an old -> new swap of a string against a file
+// used to replace paths with template placeholders
 func replaceInTempFile(file string, old string, new string) {
 
 	var tempfile string = tmpDir + "/" + filepath.Base(file)
@@ -128,6 +137,7 @@ func replaceInTempFile(file string, old string, new string) {
 	}
 }
 
+// copy copies a file into the temp directory for processing
 func copy(src string) (int64, error) {
 
 	sourceFileStat, err := os.Stat(src)
@@ -181,6 +191,7 @@ func createMachineTarball(machine string) {
 	}
 }
 
+// createArchive makes a tarball out of the contents of temp directory
 func createArchive(files []string, buf io.Writer) error {
 	// Create new Writers for gzip and tar
 	// These writers are chained. Writing to the tar writer will
@@ -202,6 +213,7 @@ func createArchive(files []string, buf io.Writer) error {
 	return nil
 }
 
+// addToArchive tarballs a file
 func addToArchive(tw *tar.Writer, filename string) error {
 	// Open the file which will be written into the archive
 	file, err := os.Open(filename)
@@ -243,6 +255,7 @@ func addToArchive(tw *tar.Writer, filename string) error {
 	return nil
 }
 
+// createBucket will create the bucket referenced in the machine-s3-bucket string. Call this with a flag.
 func createBucket() {
 	bucket := viper.GetString("machine-s3-bucket")
 
@@ -272,6 +285,7 @@ func createBucket() {
 
 }
 
+// uploadFileToBucket takes the machine tarball and puts it in S3
 func uploadFileToBucket(machine string) {
 	bucket := viper.GetString("machine-s3-bucket")
 
