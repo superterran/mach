@@ -73,12 +73,12 @@ var DockerRegistry = "superterran/mach"
 
 var lastOutput = "begin"
 
-type ErrorLine struct {
+type errorLine struct {
 	Error       string      `json:"error"`
-	ErrorDetail ErrorDetail `json:"errorDetail"`
+	errorDetail errorDetail `json:"errorDetail"`
 }
 
-type ErrorDetail struct {
+type errorDetail struct {
 	Message string `json:"message"`
 }
 
@@ -89,7 +89,7 @@ func CreateBuildCmd() *cobra.Command {
 		Long: `This allows you to maintain a directory of docker images, with templating,
 	and use this to populate a docker registry. `,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runBuild(cmd, args)
+			return RunBuild(cmd, args)
 		},
 	}
 	return cmd
@@ -116,11 +116,11 @@ func init() {
 
 }
 
-// runBuild is the main flow for the build command. If no arguments are present, it will each through
+// RunBuild is the main flow for the build command. If no arguments are present, it will each through
 // the images directory and attempt to build every file matching the pattern `Dockerfile*`. If arguements are passed
 // it will attempt to match the strings with dockerfiles and build those only. This method sets several flags,
 // OutputOnly is suitable for leveraging the stdout which provides the contents of a templated dockerfile.
-func runBuild(cmd *cobra.Command, args []string) error {
+func RunBuild(cmd *cobra.Command, args []string) error {
 
 	OutputOnly, _ := cmd.Flags().GetBool("output-only")
 	if OutputOnly {
@@ -310,7 +310,7 @@ func buildImage(filename string) string {
 
 			var lastLine = scanner.Text()
 
-			errLine := &ErrorLine{}
+			errLine := &errorLine{}
 			json.Unmarshal([]byte(lastLine), errLine)
 			if errLine.Error != "" {
 				log.Fatal(color.RedString(errLine.Error))

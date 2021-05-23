@@ -17,7 +17,12 @@ install: build ## compiles and installs into system
 	sudo chmod +x /usr/local/bin/mach
 run: ## run the command through go, accepts args i.e. `make run -- build -h`
 	go run ./main.go $(RUN_ARGS)
-test:
+test: build
 	go test --cover ./... 
-coverage: ## run test suite suitable for codecov.io
+coverage: build ## run test suite suitable for codecov.io
 	go test -race -coverprofile=coverage.txt -covermode=atomic ./...
+lcov: coverage ## lcov formatted test files for ide interpretation
+	mkdir -p coverage
+	gcov2lcov -infile=coverage.txt -outfile=coverage/lcov-vscode.info
+lcov-deps: ## install dependancies for gcov2lcov
+	go get -u github.com/jandelgado/gcov2lcov

@@ -20,3 +20,4 @@
 mach
 coverage.txt
 *.tar.gz
+coverage
