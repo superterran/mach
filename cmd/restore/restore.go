@@ -21,7 +21,17 @@ import (
 
 var tmpDir = ""
 
+// TestMode var determines if certain flows actually complete or not for unit testing
 var TestMode = false
+
+// MachineS3Bucket defines which bucket mach interacts with for storing config tarballs, pulled from `machine-s3-bucket` in .mach.conf.yaml
+var MachineS3Bucket string = "mach-docker-machine-certificates"
+
+// MachineS3Region defines which region the bucket is in, pulled from `machine-s3-region` in .mach.conf.yaml
+var MachineS3Region string = "us-east-1"
+
+// KeepTarball will trigger a clean-up of the tarball, set to true to prevent, or `-k` or `--keep-tarball`
+var KeepTarball bool = false
 
 var restoreCmd = CreateRestoreCmd()
 
@@ -43,9 +53,17 @@ func init() {
 
 	TestMode = strings.HasSuffix(os.Args[0], ".test")
 
-	viper.SetDefault("machine-s3-bucket", "mach-docker-machine-certificates")
-	viper.SetDefault("machine-s3-region", "us-east-1")
-	restoreCmd.Flags().BoolP("keep-tarball", "k", false, "keeps the tarball in working directory after upload")
+	viper.SetDefault("machine-s3-bucket", MachineS3Bucket)
+	MachineS3Bucket = viper.GetString("machine-s3-bucket")
+
+	viper.SetDefault("machine-s3-region", MachineS3Region)
+	MachineS3Region = viper.GetString("machine-s3-region")
+
+	restoreCmd.Flags().BoolP("keep-tarball", "k", KeepTarball, "keeps the tarball in working directory after upload")
+	KeepTarball, _ := restoreCmd.Flags().GetBool("keep-tarball")
+	if KeepTarball {
+		fmt.Println("--keep-tarball set")
+	}
 
 }
 
@@ -60,13 +78,11 @@ func runRestore(cmd *cobra.Command, args []string) error {
 
 		defer os.RemoveAll(tmpDir)
 
-		keepTarball, _ := cmd.Flags().GetBool("keep-tarball")
-
-		if !keepTarball {
+		if !KeepTarball {
 			removeMachineArchive(args[0])
 		}
 
-		fmt.Println(args[0] + " restore complete from " + viper.GetString("machine-s3-bucket") + " bucket")
+		fmt.Println(args[0] + " restore complete from " + MachineS3Bucket + " bucket")
 
 	}
 
@@ -76,7 +92,6 @@ func runRestore(cmd *cobra.Command, args []string) error {
 func downloadFromS3(machine string) {
 
 	var filename string = machine + ".tar.gz"
-	var bucket = viper.GetString("machine-s3-bucket")
 	var item string = filename
 	file, err := os.Create(item)
 	if err != nil {
@@ -85,7 +100,7 @@ func downloadFromS3(machine string) {
 	defer file.Close()
 
 	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String(viper.GetString("machine-s3-region"))},
+		Region: aws.String(MachineS3Region)},
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -94,7 +109,7 @@ func downloadFromS3(machine string) {
 	downloader := s3manager.NewDownloader(sess)
 	numBytes, err := downloader.Download(file,
 		&s3.GetObjectInput{
-			Bucket: aws.String(bucket),
+			Bucket: aws.String(MachineS3Bucket),
 			Key:    aws.String(item),
 		})
 	if err != nil {
