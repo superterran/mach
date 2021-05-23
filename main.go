@@ -1,5 +1,5 @@
 /*
-A cli application for using docker to quickly and easily manage infrastructure
+Mach is a cli application for using docker to quickly and easily manage infrastructure
 and services through code.
 
 Mach provides tooling around a simple docker and docker-machine based workflow for

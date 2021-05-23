@@ -14,20 +14,15 @@ import (
 
 var cfgFile string
 
-// rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "mach",
 	Short: "Tool for mocking out environments with docker",
 	Long: `A tool for provisioning and running docker compositions both locally and in the cloud.
 	
 	usage: mach build php:7.3`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {},
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
@@ -38,14 +33,7 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is loaded from working dir, or $HOME/.mach.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
 	rootCmd.AddCommand(build.CreateBuildCmd())
@@ -72,11 +60,6 @@ func initConfig() {
 		viper.SetConfigName(".mach")
 	}
 
-	viper.AutomaticEnv() // read in environment variables that match
-
+	viper.AutomaticEnv()
 	viper.ReadInConfig()
-	// If a config file is found, read it in.
-	// if err := viper.ReadInConfig(); err == nil {
-	// 	fmt.Println("Using config file:", viper.ConfigFileUsed())
-	// }
 }
