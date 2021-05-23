@@ -1,8 +1,4 @@
-/*
-Backup package creates a tarball containing the configs and credentials for
-a given docker-machine and stores it to S3. This command also modifies the
-configuration for portibility.
-*/
+// Package backup copies docker-machine certs and configurations to S3
 package backup
 
 import (
@@ -28,7 +24,20 @@ var backupCmd = CreateBackupCmd()
 
 var tmpDir = ""
 
+// TestMode var determines if certain flows actually complete or not for unit testing
 var TestMode = false
+
+// MachineS3Bucket defines which bucket mach interacts with for storing config tarballs, pulled from `machine-s3-bucket` in .mach.conf.yaml
+var MachineS3Bucket string = "mach-docker-machine-certificates"
+
+// MachineS3Region defines which region the bucket is in, pulled from `machine-s3-region` in .mach.conf.yaml
+var MachineS3Region string = "us-east-1"
+
+// CreateBucketFirst will trigger the creation of a bucket before a backup, triggered with cli flag `-c` or `--create`
+var CreateBucketFirst bool = false
+
+// KeepTarball will trigger a clean-up of the tarball, set to true to prevent, or `-k` or `--keep-tarball`
+var KeepTarball bool = false
 
 func CreateBackupCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -48,13 +57,20 @@ func init() {
 
 	TestMode = strings.HasSuffix(os.Args[0], ".test")
 
-	viper.SetDefault("machine-s3-bucket", "mach-docker-machine-certificates")
-	viper.SetDefault("machine-s3-region", "us-east-1")
+	viper.SetDefault("machine-s3-bucket", MachineS3Bucket)
+	MachineS3Bucket = viper.GetString("machine-s3-bucket")
 
-	backupCmd.Flags().BoolP("create", "c", false, "create the bucket before attempting backup")
+	viper.SetDefault("machine-s3-region", MachineS3Region)
+	MachineS3Region = viper.GetString("machine-s3-region")
 
-	backupCmd.Flags().BoolP("keep-tarball", "k", false, "keeps the tarball in working directory after upload")
+	backupCmd.Flags().BoolP("create", "c", CreateBucketFirst, "create the bucket before attempting backup")
+	CreateBucketFirst, _ = backupCmd.Flags().GetBool("create")
 
+	backupCmd.Flags().BoolP("keep-tarball", "k", KeepTarball, "keeps the tarball in working directory after upload")
+	KeepTarball, _ := backupCmd.Flags().GetBool("keep-tarball")
+	if KeepTarball {
+		fmt.Println("--keep-tarball set")
+	}
 }
 
 // runBackup is the main command flow, it will attempt to create an S3 bucket if
@@ -62,9 +78,7 @@ func init() {
 // machine config, tarball it, and push to S3, and delete the temp files created
 func runBackup(cmd *cobra.Command, args []string) error {
 
-	createFirst, _ := cmd.Flags().GetBool("create")
-
-	if createFirst {
+	if CreateBucketFirst {
 		createBucket()
 	}
 
@@ -76,14 +90,11 @@ func runBackup(cmd *cobra.Command, args []string) error {
 
 		defer os.RemoveAll(tmpDir)
 
-		keepTarball, _ := cmd.Flags().GetBool("keep-tarball")
+		fmt.Println(args[0] + " backup complete to " + MachineS3Bucket + " bucket")
 
-		if !keepTarball {
+		if !KeepTarball {
 			removeMachineArchive(args[0])
 		}
-
-		fmt.Println(args[0] + " backup complete to " + viper.GetString("machine-s3-bucket") + " bucket")
-
 	}
 
 	return nil
@@ -260,7 +271,7 @@ func addToArchive(tw *tar.Writer, filename string) error {
 
 // createBucket will create the bucket referenced in the machine-s3-bucket string. Call this with a flag.
 func createBucket() {
-	bucket := viper.GetString("machine-s3-bucket")
+	bucket := MachineS3Bucket
 
 	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String(viper.GetString("machine-s3-region"))},
@@ -290,7 +301,7 @@ func createBucket() {
 
 // uploadFileToBucket takes the machine tarball and puts it in S3
 func uploadFileToBucket(machine string) {
-	bucket := viper.GetString("machine-s3-bucket")
+	bucket := MachineS3Bucket
 
 	var filename = machine + ".tar.gz"
 
@@ -337,8 +348,11 @@ func createTempDirectory() string {
 }
 
 func removeMachineArchive(machine string) {
-	e := os.Remove(machine + ".tar.gz")
-	if e != nil {
-		log.Fatal(e)
+	if !KeepTarball {
+		e := os.Remove(machine + ".tar.gz")
+		if e != nil {
+			log.Fatal(e)
+		}
 	}
+
 }
