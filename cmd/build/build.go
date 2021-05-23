@@ -46,11 +46,30 @@ var buildCmd = CreateBuildCmd()
 // TestMode var determines if certain flows actually complete or not for unit testing
 var TestMode = false
 
+// OutputOnly will break execution of the build tool and will post the generated dockerfile template to stdout
+// invoke with `-o` or `--outout-only`
 var OutputOnly = false
 
+// FirstOnly will stop the build loop after the first image is found, useful for output only
 var FirstOnly = false
 
+// Nopush builds the image, but does not push to a registry. Set with `--no-push` or `-n`
 var Nopush bool = false
+
+// BuildImageDirname tells the tool which directory to itereate through to find Dockerfiles. defaults the present working
+// directory, but a good practice is to mint a .mach.yaml and set this to `images` or the like when building an IaC repo.
+var BuildImageDirname = "."
+
+// DefaultGitBranch allows for setting which branch does not add a branch variant to the tag. Default to main, consider
+// changing your branch name before chaning this default.
+var DefaultGitBranch = "main"
+
+// DockerHost is the URL for the docker registry, we default to the offical registry, but this can be changed in config
+// to any registry you like.
+var DockerHost = "https://index.docker.io/v1/"
+
+// DockerRegistry is the package name inside the docker registry. @todo think through a better name
+var DockerRegistry = "superterran/mach"
 
 var lastOutput = "begin"
 
@@ -80,32 +99,21 @@ func init() {
 
 	TestMode = strings.HasSuffix(os.Args[0], ".test")
 
-	// no-push flag prevents pushing to the docker registry, good for testing locally
-	buildCmd.Flags().BoolP("no-push", "n", false, "Do not push to registry")
+	buildCmd.Flags().BoolP("no-push", "n", Nopush, "Do not push to registry")
+	buildCmd.Flags().BoolP("output-only", "o", OutputOnly, "send output to stdout, do not build")
+	buildCmd.Flags().BoolP("first-only", "f", FirstOnly, "stop the build loop after the first image is found")
+	viper.SetDefault("BuildImageDirname", BuildImageDirname)
+	BuildImageDirname = viper.GetString("BuildImageDirname")
 
-	// output-only does not build the image, just outputs the template to stdout
-	buildCmd.Flags().BoolP("output-only", "o", false, "send output to stdout, do not build")
+	viper.SetDefault("defaultGitBranch", DefaultGitBranch)
+	DefaultGitBranch = DefaultGitBranch
 
-	// first-only will stop after processing the first image if more than one image is matched. Good to pair with output-only
-	// if you intend to pipe output to a file
-	buildCmd.Flags().BoolP("first-only", "f", false, "breaks after processing first image if more than one")
+	viper.SetDefault("docker_host", DockerHost)
+	DockerHost = viper.GetString("docker_host")
 
-	// buildImageDirname tells the tool which directory to itereate through to find Dockerfiles. defaults the present working
-	// directory, but a good practice is to mint a .mach.yaml and set this to `images` or the like when building an IaC repo.
-	viper.SetDefault("buildImageDirname", ".")
+	viper.SetDefault("docker_registry", DockerRegistry)
+	DockerRegistry = viper.GetString("docker_registry")
 
-	// defaultGitBranch allows for setting which branch does not add a branch variant to the tag. Default to main, consider
-	// changing your branch name before chaning this default.
-	viper.SetDefault("defaultGitBranch", "main")
-
-	//docker_host is the URL for the docker registry, we default to the offical registry, but this can be changed in config
-	// to any registry you like.
-	viper.SetDefault("docker_host", "https://index.docker.io/v1/")
-
-	if TestMode {
-		// docker_registry is the package name inside the docker registry. @todo think through a better name
-		viper.SetDefault("docker_registry", "superterran/mach")
-	}
 }
 
 // runBuild is the main flow for the build command. If no arguments are present, it will each through
@@ -125,7 +133,7 @@ func runBuild(cmd *cobra.Command, args []string) error {
 	FirstOnly, _ := cmd.Flags().GetBool("first-only")
 
 	if len(args) < 1 {
-		matches, _ := filepath.Glob(viper.GetString("buildImageDirname") + "/**/Dockerfile*")
+		matches, _ := filepath.Glob(viper.GetString("BuildImageDirname") + "/**/Dockerfile*")
 		for _, match := range matches {
 			var mach_tag string = buildImage(match)
 			if !Nopush || OutputOnly {
@@ -147,7 +155,7 @@ func runBuild(cmd *cobra.Command, args []string) error {
 				variant = "-" + strings.Split(arg, ":")[1]
 			}
 
-			matches, _ := filepath.Glob(viper.GetString("buildImageDirname") + "/" + image + "/Dockerfile" + variant + "*")
+			matches, _ := filepath.Glob(BuildImageDirname + "/" + image + "/Dockerfile" + variant + "*")
 			for _, match := range matches {
 				var mach_tag string = buildImage(match)
 
@@ -237,7 +245,7 @@ func getBranchVariant() string {
 
 	if strings.Contains(branch, "/") {
 		var variant_branch string = strings.Split(branch, "/")[2]
-		if variant_branch != viper.GetString("defaultGitBranch") {
+		if variant_branch != DefaultGitBranch {
 			variant = "-" + variant_branch
 		}
 	}
