@@ -60,6 +60,16 @@ func Test_buildCmd_Help(t *testing.T) {
 }
 
 func Test_BasicExamplePush(t *testing.T) {
+
+	Nopush = true
+	var expect = "skipping"
+	var actual = pushImage("example-variant")
+	assert.Contains(t, actual, expect,
+		"pushImage method should get to end, skipping push due to testing state",
+	)
+}
+
+func Test_BasicExamplePushNoPushFlag(t *testing.T) {
 	var expect = "skipping push due to TestMode"
 	var actual = pushImage("example-variant")
 	assert.Contains(t, actual, expect,
@@ -83,7 +93,17 @@ func Test_GetTag(t *testing.T) {
 	)
 }
 
+func Test_GetTagNoRegistry(t *testing.T) {
+	DockerRegistry = ""
+	var expect = "example"
+	var actual = getTag("images/example/Dockerfile")
+	assert.Contains(t, actual, expect,
+		"tag should come back as example",
+	)
+}
+
 func Test_GetTagWithVariant(t *testing.T) {
+	DockerRegistry = "superterran/mach"
 	var expect = "superterran/mach:example-test"
 	var actual = getTag("images/example/Dockerfile-test")
 	assert.Contains(t, actual, expect,
@@ -91,9 +111,17 @@ func Test_GetTagWithVariant(t *testing.T) {
 	)
 }
 
-func Test_dockerLogStatus(t *testing.T) {
+func Test_dockerLogStream(t *testing.T) {
 	var expect = "Successfully built 6dbb9cc54074"
 	var actual = dockerLog("{\"stream\":\"Successfully built 6dbb9cc54074\n\"}")
+	assert.Contains(t, actual, expect,
+		"dockerLog method only contains json body",
+	)
+}
+
+func Test_dockerLogStatus(t *testing.T) {
+	var expect = "Successfully built 6dbb9cc54074"
+	var actual = dockerLog("{\"status\":\"Successfully built 6dbb9cc54074\n\"}")
 	assert.Contains(t, actual, expect,
 		"dockerLog method only contains json body",
 	)
@@ -105,4 +133,35 @@ func Test_dockerLogStrangeMessageInFull(t *testing.T) {
 	assert.Contains(t, actual, expect,
 		"dockerLog method returns strange data as-is",
 	)
+}
+
+func Test_buildCmdOneArgNone(t *testing.T) {
+
+	var actual = MainBuildFlow([]string{""})
+
+	if actual != nil {
+		assert.FailNowf(t, "returned not nil.", "Error msg: %v", actual)
+	}
+}
+
+func Test_buildCmdOneArgOutputOnly(t *testing.T) {
+
+	OutputOnly = true
+
+	var actual = MainBuildFlow([]string{"example"})
+
+	if actual != nil {
+		assert.FailNowf(t, "returned not nil.", "Error msg: %v", actual)
+	}
+}
+
+func Test_buildCmdOneArgOutputOnlyWithTag(t *testing.T) {
+
+	OutputOnly = true
+
+	var actual = MainBuildFlow([]string{"example:go"})
+
+	if actual != nil {
+		assert.FailNowf(t, "returned not nil.", "Error msg: %v", actual)
+	}
 }

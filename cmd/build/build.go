@@ -58,7 +58,7 @@ var Nopush bool = false
 
 // BuildImageDirname tells the tool which directory to itereate through to find Dockerfiles. defaults the present working
 // directory, but a good practice is to mint a .mach.yaml and set this to `images` or the like when building an IaC repo.
-var BuildImageDirname = "."
+var BuildImageDirname = "images"
 
 // DefaultGitBranch allows for setting which branch does not add a branch variant to the tag. Default to main, consider
 // changing your branch name before chaning this default.
@@ -89,7 +89,7 @@ func CreateBuildCmd() *cobra.Command {
 		Long: `This allows you to maintain a directory of docker images, with templating,
 	and use this to populate a docker registry. `,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return RunBuild(cmd, args)
+			return runBuild(cmd, args)
 		},
 	}
 	return cmd
@@ -100,8 +100,17 @@ func init() {
 	TestMode = strings.HasSuffix(os.Args[0], ".test")
 
 	buildCmd.Flags().BoolP("no-push", "n", Nopush, "Do not push to registry")
+	Nopush, _ := buildCmd.Flags().GetBool("no-push")
+	_ = Nopush
+
 	buildCmd.Flags().BoolP("output-only", "o", OutputOnly, "send output to stdout, do not build")
+	OutputOnly, _ := buildCmd.Flags().GetBool("output-only")
+	_ = OutputOnly
+
 	buildCmd.Flags().BoolP("first-only", "f", FirstOnly, "stop the build loop after the first image is found")
+	FirstOnly, _ := buildCmd.Flags().GetBool("first-only")
+	_ = FirstOnly
+
 	viper.SetDefault("BuildImageDirname", BuildImageDirname)
 	BuildImageDirname = viper.GetString("BuildImageDirname")
 
@@ -116,21 +125,19 @@ func init() {
 
 }
 
-// RunBuild is the main flow for the build command. If no arguments are present, it will each through
+// runBuild is the main flow for the build command. If no arguments are present, it will each through
 // the images directory and attempt to build every file matching the pattern `Dockerfile*`. If arguements are passed
 // it will attempt to match the strings with dockerfiles and build those only. This method sets several flags,
 // OutputOnly is suitable for leveraging the stdout which provides the contents of a templated dockerfile.
-func RunBuild(cmd *cobra.Command, args []string) error {
+func runBuild(cmd *cobra.Command, args []string) error {
+	return MainBuildFlow(args)
+}
 
-	OutputOnly, _ := cmd.Flags().GetBool("output-only")
+func MainBuildFlow(args []string) error {
 	if OutputOnly {
 		TestMode = true
 		OutputOnly = true
 	}
-
-	Nopush, _ := cmd.Flags().GetBool("no-push")
-
-	FirstOnly, _ := cmd.Flags().GetBool("first-only")
 
 	if len(args) < 1 {
 		matches, _ := filepath.Glob(viper.GetString("BuildImageDirname") + "/**/Dockerfile*")
@@ -198,8 +205,8 @@ func getTag(filename string) string {
 
 	var tag string = filepath.Base(filepath.Dir(filename)) + getVariant(filename)
 
-	if viper.GetString("docker_registry") != "" {
-		return viper.GetString("docker_registry") + ":" + tag
+	if DockerRegistry != "" {
+		return DockerRegistry + ":" + tag
 	} else {
 		Nopush = true
 		return tag
@@ -333,19 +340,7 @@ func buildImage(filename string) string {
 // if TestMode or Nopush are true.
 func pushImage(mach_tag string) string {
 
-	if TestMode {
-		return "skipping push due to TestMode"
-	}
-
-	if Nopush {
-		return "in no push mode, skipping"
-	}
-
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-
-	if err != nil {
-		panic(err)
-	}
 
 	var authConfig = types.AuthConfig{
 		Username:      viper.GetString("docker_user"),
@@ -355,10 +350,14 @@ func pushImage(mach_tag string) string {
 	authConfigBytes, _ := json.Marshal(authConfig)
 	authConfigEncoded := base64.URLEncoding.EncodeToString(authConfigBytes)
 
+	tag := mach_tag
+
+	if Nopush || TestMode {
+		return "skipping push due to TestMode"
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*120)
 	defer cancel()
-
-	tag := mach_tag
 
 	opts := types.ImagePushOptions{RegistryAuth: authConfigEncoded}
 	rd, err := cli.ImagePush(ctx, tag, opts)
