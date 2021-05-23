@@ -165,3 +165,14 @@ func Test_buildCmdOneArgOutputOnlyWithTag(t *testing.T) {
 		assert.FailNowf(t, "returned not nil.", "Error msg: %v", actual)
 	}
 }
+
+func Test_buildCmdOneArgWithImagesOutputOnlyWithTag(t *testing.T) {
+
+	OutputOnly = true
+
+	var actual = MainBuildFlow([]string{"example:go"})
+
+	if actual != nil {
+		assert.FailNowf(t, "returned not nil.", "Error msg: %v", actual)
+	}
+}
