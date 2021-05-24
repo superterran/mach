@@ -1,4 +1,4 @@
-package stack
+package compose
 
 /* https://github.com/KEINOS/Hello-Cobra */
 
@@ -9,21 +9,21 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_stackCmd(t *testing.T) {
+func Test_composeCmd(t *testing.T) {
 	var (
-		stackCmd = CreateStackCmd()
-		argsTmp  = []string{}
-		buffTmp  = new(bytes.Buffer)
+		composeCmd = CreateComposeCmd()
+		argsTmp    = []string{}
+		buffTmp    = new(bytes.Buffer)
 
 		expect string
 		actual string
 	)
 
-	stackCmd.SetOut(buffTmp)  // set output from os.Stdout -> buffTmp
-	stackCmd.SetArgs(argsTmp) // set command args
+	composeCmd.SetOut(buffTmp)  // set output from os.Stdout -> buffTmp
+	composeCmd.SetArgs(argsTmp) // set command args
 
 	// Run `hello` command!
-	if err := stackCmd.Execute(); err != nil {
+	if err := composeCmd.Execute(); err != nil {
 		assert.FailNowf(t, "Failed to execute 'restoreCmd.Execute()'.", "Error msg: %v", err)
 	}
 
@@ -34,21 +34,21 @@ func Test_stackCmd(t *testing.T) {
 	)
 }
 
-func Test_stackCmd_Help(t *testing.T) {
+func Test_composeCmd_Help(t *testing.T) {
 	var (
-		stackCmd = CreateStackCmd()
-		argsTmp  = []string{"--help"}
-		buffTmp  = new(bytes.Buffer)
+		composeCmd = CreateComposeCmd()
+		argsTmp    = []string{"--help"}
+		buffTmp    = new(bytes.Buffer)
 
 		expect string
 		actual string
 	)
 
-	stackCmd.SetOut(buffTmp)  // set output from os.Stdout -> buffTmp
-	stackCmd.SetArgs(argsTmp) // set command args
+	composeCmd.SetOut(buffTmp)  // set output from os.Stdout -> buffTmp
+	composeCmd.SetArgs(argsTmp) // set command args
 
 	// Run `hello` command!
-	if err := stackCmd.Execute(); err != nil {
+	if err := composeCmd.Execute(); err != nil {
 		assert.FailNowf(t, "Failed to execute 'restoreCmd.Execute()'.", "Error msg: %v", err)
 	}
 
@@ -59,26 +59,26 @@ func Test_stackCmd_Help(t *testing.T) {
 	)
 }
 
-func Test_StackMainFlowExample(t *testing.T) {
+func Test_ComposeMainFlowExample(t *testing.T) {
 
-	StacksDirname = "examples/stacks"
+	ComposeDirname = "examples/composes"
 
 	TestMode = true
 
-	var actual = MainStackFlow([]string{"deploy", "example"})
+	var actual = MainComposeFlow([]string{"deploy", "example"})
 
 	if actual != nil {
 		assert.FailNowf(t, "returned not nil.", "Error msg: %v", actual)
 	}
 }
 
-func Test_StackMainFlow(t *testing.T) {
+func Test_ComposeMainFlow(t *testing.T) {
 
-	StacksDirname = "examples/stacks"
+	ComposeDirname = "examples/composes"
 
 	TestMode = true
 
-	var actual = MainStackFlow([]string{"deploy"})
+	var actual = MainComposeFlow([]string{"deploy"})
 
 	if actual != nil {
 		assert.FailNowf(t, "returned not nil.", "Error msg: %v", actual)
