@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -69,14 +70,24 @@ func runCompose(cmd *cobra.Command, args []string) error {
 
 func MainComposeFlow(args []string) error {
 
-	if len(args) > 1 {
+	if len(args) > 0 {
 
 		s := []string{"up", "down", "ps"}
 
-		composeArgs := args[1:]
-
 		if contains(s, args[1]) {
+			composeArgs := args[1:]
 			RunCompose(args[0], composeArgs)
+		} else if contains(s, args[0]) {
+			fmt.Println("this far")
+			matches, _ := filepath.Glob(ComposeDirname + "/**/docker-compose.yml")
+			for _, match := range matches {
+				dir := filepath.Dir(match)
+				composition := filepath.Base(dir)
+				composeArgs := args[0:]
+				RunCompose(composition, composeArgs)
+
+			}
+
 		}
 
 	}
@@ -89,9 +100,20 @@ func MainComposeFlow(args []string) error {
 // `mach compose satis up -- -d --force-recreate`.
 func RunCompose(composition string, args []string) {
 
+	fmt.Println(composition)
+	fmt.Println(args)
+
 	baseCmd := "docker-compose"
 
-	var composeDir string = ComposeDirname + "/" + composition + "/"
+	path, err := os.Getwd()
+	if err != nil {
+		log.Println(err)
+	}
+	fmt.Println(path)
+
+	var composeDir string = path + "/../../" + ComposeDirname + "/" + composition
+
+	fmt.Println(composeDir)
 
 	s := []string{"up", "down", "ps"}
 	if contains(s, args[0]) {

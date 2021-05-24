@@ -59,26 +59,22 @@ func Test_composeCmd_Help(t *testing.T) {
 	)
 }
 
-func Test_ComposeMainFlowExample(t *testing.T) {
+func Test_ComposeMainFlow(t *testing.T) {
 
-	ComposeDirname = "examples/composes"
+	ComposeDirname = "examples/stacks"
 
-	TestMode = true
-
-	var actual = MainComposeFlow([]string{"deploy", "example"})
+	var actual = MainComposeFlow([]string{})
 
 	if actual != nil {
 		assert.FailNowf(t, "returned not nil.", "Error msg: %v", actual)
 	}
 }
 
-func Test_ComposeMainFlow(t *testing.T) {
+func Test_ComposeMainFlowExample(t *testing.T) {
 
-	ComposeDirname = "examples/composes"
+	ComposeDirname = "examples/stacks"
 
-	TestMode = true
-
-	var actual = MainComposeFlow([]string{"deploy"})
+	var actual = MainComposeFlow([]string{"example", "up"})
 
 	if actual != nil {
 		assert.FailNowf(t, "returned not nil.", "Error msg: %v", actual)
