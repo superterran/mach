@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"text/template"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -70,16 +71,19 @@ func runCompose(cmd *cobra.Command, args []string) error {
 
 func MainComposeFlow(args []string) error {
 
-	if len(args) > 0 {
+	s := []string{"up", "down", "ps"}
 
-		s := []string{"up", "down", "ps"}
+	if len(args) > 1 {
 
 		if contains(s, args[1]) {
 			composeArgs := args[1:]
 			RunCompose(args[0], composeArgs)
-		} else if contains(s, args[0]) {
-			fmt.Println("this far")
-			matches, _ := filepath.Glob(ComposeDirname + "/**/docker-compose.yml")
+		}
+	}
+
+	if len(args) > 0 {
+		if contains(s, args[0]) {
+			matches, _ := filepath.Glob(ComposeDirname + "/**/docker-compose.yml*")
 			for _, match := range matches {
 				dir := filepath.Dir(match)
 				composition := filepath.Base(dir)
@@ -100,34 +104,46 @@ func MainComposeFlow(args []string) error {
 // `mach compose satis up -- -d --force-recreate`.
 func RunCompose(composition string, args []string) {
 
-	fmt.Println(composition)
-	fmt.Println(args)
-
 	baseCmd := "docker-compose"
 
-	path, err := os.Getwd()
-	if err != nil {
-		log.Println(err)
+	var composeDir string = ComposeDirname + "/" + composition
+	composeDir, _ = filepath.Abs(composeDir)
+
+	if _, err := os.Stat(composeDir + "/docker-compose.yml.tpl"); err == nil {
+		generateTemplate(composeDir + "/docker-compose.yml.tpl")
 	}
-	fmt.Println(path)
-
-	var composeDir string = path + "/../../" + ComposeDirname + "/" + composition
-
-	fmt.Println(composeDir)
 
 	s := []string{"up", "down", "ps"}
 	if contains(s, args[0]) {
 
 		cmd := exec.Command(baseCmd, args...)
 		cmd.Dir = composeDir
-		out, err := cmd.CombinedOutput()
+		out, _ := cmd.CombinedOutput()
 
 		fmt.Println(string(out))
 
-		if err != nil {
-			log.Fatal(err)
-		}
 	}
+
+}
+
+func generateTemplate(filename string) {
+
+	generateFilename := filepath.Dir(filename) + "/docker-compose.yml"
+
+	wr, err := os.Create(generateFilename)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	tpl, err := template.ParseGlob(filename)
+	if err != nil {
+		panic(err)
+	}
+
+	tpl.ParseGlob(filepath.Dir(filename) + "/includes/*.tpl")
+	tpl.Execute(wr, filepath.Base(filename))
+
+	wr.Close()
 
 }
 
