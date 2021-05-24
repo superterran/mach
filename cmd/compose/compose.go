@@ -84,18 +84,14 @@ func MainComposeFlow(args []string) error {
 	return nil
 }
 
+// RunCompose is a wrapper for `docker-compose`. It requires `docker-compose` installed locally, and the command is
+// invoked from the directory of the composition. When running commands, pass flags to docker-composer with --, i.e.
+// `mach compose satis up -- -d --force-recreate`.
 func RunCompose(composition string, args []string) {
 
 	baseCmd := "docker-compose"
 
 	var composeDir string = ComposeDirname + "/" + composition + "/"
-
-	// cmdArgs := []string{}
-	// cmdArgs = append(cmdArgs, args[0:]...)
-	// // cmdArgs = append(cmdArgs, "--file")
-	// // cmdArgs = append(cmdArgs, composeDir)
-
-	fmt.Println(args)
 
 	s := []string{"up", "down", "ps"}
 	if contains(s, args[0]) {
