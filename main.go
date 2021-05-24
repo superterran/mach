@@ -9,15 +9,9 @@ leverage any git repository for the purposes of managing your Infrastructure as 
 package main
 
 import (
-	"github.com/spf13/viper"
 	"github.com/superterran/mach/cmd"
 )
 
 func main() {
-
-	viper.AddConfigPath(".")
-	viper.SetEnvPrefix("mach")
-	viper.AutomaticEnv()
-
 	cmd.Execute()
 }

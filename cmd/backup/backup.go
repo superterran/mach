@@ -39,6 +39,23 @@ var CreateBucketFirst bool = false
 // KeepTarball will trigger a clean-up of the tarball, set to true to prevent, or `-k` or `--keep-tarball`
 var KeepTarball bool = false
 
+// path to configruation files
+var cfgFile string
+
+// initConfig reads in config file and ENV variables if set.
+func initConfig() {
+	if cfgFile != "" {
+		// Use config file from the flag.
+		viper.SetConfigFile(cfgFile)
+	} else {
+		viper.AddConfigPath(".")
+		viper.SetConfigName(".mach")
+	}
+
+	viper.AutomaticEnv()
+	viper.ReadInConfig()
+}
+
 func CreateBackupCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "backup <docker-machine>",
@@ -56,6 +73,10 @@ systems using the AWS API. Will require programmatic credentials with permission
 func init() {
 
 	TestMode = strings.HasSuffix(os.Args[0], ".test")
+
+	backupCmd.Flags().StringVar(&cfgFile, "config", "", "config file (default is loaded from working dir)")
+
+	initConfig()
 
 	viper.SetDefault("machine-s3-bucket", MachineS3Bucket)
 	MachineS3Bucket = viper.GetString("machine-s3-bucket")

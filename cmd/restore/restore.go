@@ -34,6 +34,23 @@ var MachineS3Region string = "us-east-1"
 // KeepTarball will trigger a clean-up of the tarball, set to true to prevent, or `-k` or `--keep-tarball`
 var KeepTarball bool = false
 
+// path to configruation files
+var cfgFile string
+
+// initConfig reads in config file and ENV variables if set.
+func initConfig() {
+	if cfgFile != "" {
+		// Use config file from the flag.
+		viper.SetConfigFile(cfgFile)
+	} else {
+		viper.AddConfigPath(".")
+		viper.SetConfigName(".mach")
+	}
+
+	viper.AutomaticEnv()
+	viper.ReadInConfig()
+}
+
 var restoreCmd = CreateRestoreCmd()
 
 func CreateRestoreCmd() *cobra.Command {
@@ -53,6 +70,10 @@ systems using the AWS API. Will require progamtic credetials with permissions to
 func init() {
 
 	TestMode = strings.HasSuffix(os.Args[0], ".test")
+
+	restoreCmd.Flags().StringVar(&cfgFile, "config", "", "config file (default is loaded from working dir)")
+
+	initConfig()
 
 	viper.SetDefault("machine-s3-bucket", MachineS3Bucket)
 	MachineS3Bucket = viper.GetString("machine-s3-bucket")

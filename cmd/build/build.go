@@ -58,20 +58,38 @@ var Nopush bool = false
 
 // BuildImageDirname tells the tool which directory to itereate through to find Dockerfiles. defaults the present working
 // directory, but a good practice is to mint a .mach.yaml and set this to `images` or the like when building an IaC repo.
-var BuildImageDirname = "."
+var BuildImageDirname string = "."
 
 // DefaultGitBranch allows for setting which branch does not add a branch variant to the tag. Default to main, consider
 // changing your branch name before chaning this default.
-var DefaultGitBranch = "main"
+var DefaultGitBranch string = "main"
 
 // DockerHost is the URL for the docker registry, we default to the offical registry, but this can be changed in config
 // to any registry you like.
-var DockerHost = "https://index.docker.io/v1/"
+var DockerHost string = "https://index.docker.io/v1/"
 
 // DockerRegistry is the package name inside the docker registry. @todo think through a better name
 var DockerRegistry = "superterran/mach"
 
-var lastOutput = "begin"
+// lastOutput is a buffer for the last output generated, `buffer-empty` is just a placeholder
+var lastOutput string = "buffer-empty"
+
+// path to configruation files
+var cfgFile string
+
+// initConfig reads in config file and ENV variables if set.
+func initConfig() {
+	if cfgFile != "" {
+		// Use config file from the flag.
+		viper.SetConfigFile(cfgFile)
+	} else {
+		viper.AddConfigPath(".")
+		viper.SetConfigName(".mach")
+	}
+
+	viper.AutomaticEnv()
+	viper.ReadInConfig()
+}
 
 type errorLine struct {
 	Error       string      `json:"error"`
@@ -99,16 +117,20 @@ func init() {
 
 	TestMode = strings.HasSuffix(os.Args[0], ".test")
 
+	buildCmd.Flags().StringVar(&cfgFile, "config", "", "config file (default is loaded from working dir)")
+
+	initConfig()
+
 	buildCmd.Flags().BoolP("no-push", "n", Nopush, "Do not push to registry")
-	Nopush, _ := buildCmd.Flags().GetBool("no-push")
+	Nopush, _ = buildCmd.Flags().GetBool("no-push")
 	_ = Nopush
 
 	buildCmd.Flags().BoolP("output-only", "o", OutputOnly, "send output to stdout, do not build")
-	OutputOnly, _ := buildCmd.Flags().GetBool("output-only")
+	OutputOnly, _ = buildCmd.Flags().GetBool("output-only")
 	_ = OutputOnly
 
 	buildCmd.Flags().BoolP("first-only", "f", FirstOnly, "stop the build loop after the first image is found")
-	FirstOnly, _ := buildCmd.Flags().GetBool("first-only")
+	FirstOnly, _ = buildCmd.Flags().GetBool("first-only")
 	_ = FirstOnly
 
 	viper.SetDefault("BuildImageDirname", BuildImageDirname)
@@ -130,6 +152,7 @@ func init() {
 // it will attempt to match the strings with dockerfiles and build those only. This method sets several flags,
 // OutputOnly is suitable for leveraging the stdout which provides the contents of a templated dockerfile.
 func runBuild(cmd *cobra.Command, args []string) error {
+
 	return MainBuildFlow(args)
 }
 

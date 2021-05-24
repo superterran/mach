@@ -23,6 +23,23 @@ var StacksDirname = "."
 // TestMode var determines if certain flows actually complete or not for unit testing
 var TestMode = false
 
+// path to configruation files
+var cfgFile string
+
+// initConfig reads in config file and ENV variables if set.
+func initConfig() {
+	if cfgFile != "" {
+		// Use config file from the flag.
+		viper.SetConfigFile(cfgFile)
+	} else {
+		viper.AddConfigPath(".")
+		viper.SetConfigName(".mach")
+	}
+
+	viper.AutomaticEnv()
+	viper.ReadInConfig()
+}
+
 func CreateStackCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "stack <docker-stack> $@",
@@ -38,6 +55,10 @@ func CreateStackCmd() *cobra.Command {
 func init() {
 
 	TestMode = strings.HasSuffix(os.Args[0], ".test")
+
+	stackCmd.Flags().StringVar(&cfgFile, "config", "", "config file (default is loaded from working dir)")
+
+	initConfig()
 
 	viper.SetDefault("StacksDirname", StacksDirname)
 	StacksDirname = viper.GetString("StacksDirname")
