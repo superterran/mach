@@ -58,7 +58,7 @@ var Nopush bool = false
 
 // BuildImageDirname tells the tool which directory to itereate through to find Dockerfiles. defaults the present working
 // directory, but a good practice is to mint a .mach.yaml and set this to `images` or the like when building an IaC repo.
-var BuildImageDirname = "images"
+var BuildImageDirname = "."
 
 // DefaultGitBranch allows for setting which branch does not add a branch variant to the tag. Default to main, consider
 // changing your branch name before chaning this default.
@@ -140,7 +140,7 @@ func MainBuildFlow(args []string) error {
 	}
 
 	if len(args) < 1 {
-		matches, _ := filepath.Glob(viper.GetString("BuildImageDirname") + "/**/Dockerfile*")
+		matches, _ := filepath.Glob(BuildImageDirname + "/**/Dockerfile*")
 		for _, match := range matches {
 			var mach_tag string = buildImage(match)
 			if !Nopush || OutputOnly {

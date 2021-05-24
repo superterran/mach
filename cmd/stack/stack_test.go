@@ -58,3 +58,29 @@ func Test_stackCmd_Help(t *testing.T) {
 		"Command 'help' should show usage",
 	)
 }
+
+func Test_StackMainFlowExample(t *testing.T) {
+
+	StacksDirname = "examples/stacks"
+
+	TestMode = true
+
+	var actual = MainStackFlow([]string{"deploy", "example"})
+
+	if actual != nil {
+		assert.FailNowf(t, "returned not nil.", "Error msg: %v", actual)
+	}
+}
+
+func Test_StackMainFlow(t *testing.T) {
+
+	StacksDirname = "examples/stacks"
+
+	TestMode = true
+
+	var actual = MainStackFlow([]string{"deploy"})
+
+	if actual != nil {
+		assert.FailNowf(t, "returned not nil.", "Error msg: %v", actual)
+	}
+}

@@ -10,6 +10,7 @@ import (
 	"github.com/superterran/mach/cmd/backup"
 	"github.com/superterran/mach/cmd/build"
 	"github.com/superterran/mach/cmd/restore"
+	"github.com/superterran/mach/cmd/stack"
 )
 
 var cfgFile string
@@ -39,6 +40,7 @@ func init() {
 	rootCmd.AddCommand(build.CreateBuildCmd())
 	rootCmd.AddCommand(backup.CreateBackupCmd())
 	rootCmd.AddCommand(restore.CreateRestoreCmd())
+	rootCmd.AddCommand(stack.CreateStackCmd())
 
 }
 
