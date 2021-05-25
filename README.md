@@ -50,7 +50,7 @@ Maintain a collection of docker images that can be rapidly [built and pushed](ht
 
 ## Managing Docker Compositions
 
-This tool also provides a thin wrapper around the docker-compose command, and will process docker-compose.yml.tpl files before passing them to compose. The compose command can run against any one composition, or against all of them just like the build command. 
+This tool also provides a thin wrapper around the docker-compose command, and will process docker-compose.yml.tpl files before passing them to compose. The compose command can run against any one composition, or against all of them in sequence to allow for managing everything in one command. 
 
 # Contributing
 
