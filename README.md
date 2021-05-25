@@ -48,6 +48,10 @@ $ export AWS_DEFAULT_REGION=us-west-2
 
 Maintain a collection of docker images that can be rapidly [built and pushed](https://github.com/superterran/mach/wiki/Build-Command) to a registry. Dockerfiles can be made using templates supporting includes, conditionals, loops, etc. `mach build` can build these images, and tag them based on git branch and filename conventions. This allows for maintaining a mainline image for public use, and versions for test. 
 
+## Managing Docker Compositions
+
+This tool also provides a thin wrapper around the docker-compose command, and will process docker-compose.yml.tpl files before passing them to compose. The compose command can run against any one composition, or against all of them just like the build command. 
+
 # Contributing
 
 For a complete guide to contributing to Mach, see the [Contribution Guide](CONTRIBUTING.md)
