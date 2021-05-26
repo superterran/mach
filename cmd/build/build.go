@@ -22,6 +22,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"html/template"
 	"io"
 	"log"
@@ -379,7 +380,7 @@ func pushImage(mach_tag string) string {
 		return "skipping push due to TestMode"
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*120)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60*30)
 	defer cancel()
 
 	opts := types.ImagePushOptions{RegistryAuth: authConfigEncoded}
@@ -389,11 +390,11 @@ func pushImage(mach_tag string) string {
 	jsonmessage.DisplayJSONMessagesStream(rd, os.Stderr, termFd, isTerm, nil)
 
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 
 	if rd == nil {
-		log.Fatal(rd)
+		fmt.Println(rd)
 	}
 
 	defer rd.Close()
