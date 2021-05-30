@@ -104,14 +104,12 @@ brews:
     # So you can `brew test` your formula.
     # Default is empty.
     test: |
-      system "#{bin}/mach --version"
-      ...
-
+      system "#{bin}/mach -h"
+  
     # Custom install script for brew.
     # Default is 'bin.install "program"'.
     install: |
       bin.install "mach"
-      ...
 
     # Custom post_install script for brew.
     # Could be used to do any additional work after the "install" script
