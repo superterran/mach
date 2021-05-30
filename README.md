@@ -18,39 +18,11 @@ Mach provides tooling around a simple docker and docker-machine based workflow f
 
 This project is written in golang, using [cobra](https://github.com/spf13/cobra). Check the [wiki](https://github.com/superterran/mach/wiki) for additional documentation and user guides. 
   
-# Installation 
-
-## Brew (Linux/Mac)
-
-Installing with [brew](https://brew.sh/) is a quick way to get started...
-
-```/bin/bash
-brew tap superterran/mach
-brew install mach```
-```
-
-## Github Releases
-
-Binaries are compiled with every release, you can grab it from the [releases](https://github.com/superterran/mach/releases/) page, and use it as-is. 
-
-You can also copy it to any directory and run it directly. You can even commit it and invoked directly i.e. `bin/mach`
-
-It can also be installed to a $PATH and used globally i.e. `cp ~/Downloads/mach /usr/local/bin/mach && chmod +x /usr/local/bin/mach`
-
-## Compiling Manually
-
-If you prefer to compile from source, the Makefile can be used:
-
-```bash
-git clone git@github.com:superterran/mach.git 
-cd mach
-make install # runs `go build .` and copies to /usr/local/bin
-```
 # Usage
 
 This tool runs in git repos thats meant to represent an IaC implementation. The git repo can store _docker images_, these are used to populate a registry and to as services for _docker compositions_. The repo can also store _docker compositions_ (or stacks), which can be used to deploy to _docker-machines_. Mach can also be used to transfer _docker-machine certificates_ to and from S3. 
 
-```brew
+```bash
 mach build # builds every image in working directory (add .mach.yaml to configure)
 mach build example # builds every image in `example` directory
 mach build example:template # builds `Dockerfile-template[.tpl]` in `example` directory 
@@ -70,14 +42,49 @@ Mach can be used to backup docker-machine certificates and configurations to Ama
 
 AWS authentication is performed through the golang library, which provides a variety of ways to authenticate. You can use a tool like `aws-vault`, `~/.aws/credentials` files or environment variables such as:
 
-```
-$ export AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
-$ export AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-$ export AWS_DEFAULT_REGION=us-west-2
+```bash
+export AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
+export AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+export AWS_DEFAULT_REGION=us-west-2
 ```
 ## Managing Docker Compositions
 
 This tool also provides a thin wrapper around the docker-compose command, and will process docker-compose.yml.tpl files before passing them to compose. The compose command can run against any one composition, or against all of them in sequence to allow for managing everything in one command. 
+
+# Installation 
+
+
+
+## Brew (Linux/Mac)
+
+Installing with [brew](https://brew.sh/) is a quick way to get started...
+
+```/bin/bash
+brew tap superterran/mach
+brew install mach
+```
+
+## Github Releases
+
+Binaries are compiled with every release, you can grab it from the [releases](https://github.com/superterran/mach/releases/) page, and use it as-is. 
+
+You can copy it to any directory and run it directly, or commit it and invoke directly i.e. `bin/mach`. 
+
+It can also be installed to a $PATH and used globally i.e. 
+
+```bash
+cp ~/Downloads/mach /usr/local/bin/mach && chmod +x /usr/local/bin/mach
+```
+
+## Compiling Manually
+
+If you prefer to compile from source, the Makefile can be used:
+
+```bash
+git clone git@github.com:superterran/mach.git 
+cd mach
+make install # runs `go build .` and copies to /usr/local/bin
+```
 
 # Contributing
 
