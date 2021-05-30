@@ -215,3 +215,10 @@ func copyTo(dest string) (int64, error) {
 
 	return nBytes, err
 }
+
+func removeMachineArchive(machine string) {
+	e := os.Remove(machine + ".tar.gz")
+	if e != nil {
+		log.Fatal(e)
+	}
+}

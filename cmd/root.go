@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"strings"
 
@@ -31,17 +30,25 @@ var KeepTarball bool = false
 // invoke with `-o` or `--outout-only`
 var OutputOnly = false
 
-var rootCmd = &cobra.Command{
-	Use:   "mach",
-	Short: "Tool for mocking out environments with docker",
-	Long: `A tool for provisioning and running docker compositions both locally and in the cloud.
-	
-	usage: mach build php:8.1`,
-	Run: func(cmd *cobra.Command, args []string) {},
+var rootCmd = CreateRootCmd()
+
+func CreateRootCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "mach",
+		Short: "Tool for mocking out environments with docker",
+		Long: `A tool for provisioning and running docker compositions both locally and in the cloud.
+		
+		usage: mach build php:8.1`,
+		RunE: func(md *cobra.Command, args []string) error {
+			return nil
+		},
+	}
+	return cmd
 }
 
 func Execute() {
-	if err := rootCmd.Execute(); err != nil {
+	err := rootCmd.Execute()
+	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
@@ -69,18 +76,7 @@ func initConfig() {
 }
 
 func createTempDirectory() string {
-	dir, err := ioutil.TempDir("/tmp", "machine")
-	if err != nil {
-		log.Fatal(err)
-	}
-
+	dir, _ := ioutil.TempDir("/tmp", "machine")
 	tmpDir = dir
 	return tmpDir
-}
-
-func removeMachineArchive(machine string) {
-	e := os.Remove(machine + ".tar.gz")
-	if e != nil {
-		log.Fatal(e)
-	}
 }
