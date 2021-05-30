@@ -53,30 +53,18 @@ This tool also provides a thin wrapper around the docker-compose command, and wi
 
 # Installation 
 
+Binaries are compiled with every release, you can grab it from the [releases](https://github.com/superterran/mach/releases/) page, and use it as-is. These files are fit to be ran directly, from $PATH, or even committed i.e. `/path/to/iac-repo/bin/mach` and invoked with `cd /path/to/iac-repo/ && bin/mach`.
 
+## Homebrew
 
-## Brew (Linux/Mac)
-
-Installing with [brew](https://brew.sh/) is a quick way to get started...
+Installing with [brew](https://brew.sh/) is the preferred way to install for most use-cases. Homebrew installs the tool globally, and is updated with every release. 
 
 ```/bin/bash
 brew tap superterran/mach
 brew install mach
 ```
 
-## Github Releases
-
-Binaries are compiled with every release, you can grab it from the [releases](https://github.com/superterran/mach/releases/) page, and use it as-is. 
-
-You can copy it to any directory and run it directly, or commit it and invoke directly i.e. `bin/mach`. 
-
-It can also be installed to a $PATH and used globally i.e. 
-
-```bash
-cp ~/Downloads/mach /usr/local/bin/mach && chmod +x /usr/local/bin/mach
-```
-
-## Compiling Manually
+## Compiling From Source
 
 If you prefer to compile from source, the Makefile can be used:
 
