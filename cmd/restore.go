@@ -111,17 +111,14 @@ func downloadFromS3(machine string) {
 
 func extractTarball(machine string) {
 
-	gzipStream, err := os.Open(machine + ".tar.gz")
-	if err != nil {
-		fmt.Println("error")
-	}
+	var path = ""
 
-	uncompressedStream, err := gzip.NewReader(gzipStream)
-	if err != nil {
-		fmt.Println(err)
-
-		log.Fatal("tarball: NewReader failed")
+	if TestMode {
+		path = "../examples/"
 	}
+	gzipStream, _ := os.Open(path + machine + ".tar.gz")
+
+	uncompressedStream, _ := gzip.NewReader(gzipStream)
 
 	tarReader := tar.NewReader(uncompressedStream)
 
@@ -132,23 +129,12 @@ func extractTarball(machine string) {
 			break
 		}
 
-		if err != nil {
-			log.Fatalf("tarball: Next() failed: %s", err.Error())
-		}
-
 		switch header.Typeflag {
-		case tar.TypeDir:
-			if err := os.Mkdir(header.Name, 0755); err != nil {
-				log.Fatalf("tarball: Mkdir() failed: %s", err.Error())
-			}
+		// case tar.TypeDir:
+		// 	os.Mkdir(header.Name, 0755)
 		case tar.TypeReg:
-			outFile, err := os.Create(tmpDir + "/" + filepath.Base(header.Name))
-			if err != nil {
-				log.Fatalf("tarball: Create() failed: %s", err.Error())
-			}
-			if _, err := io.Copy(outFile, tarReader); err != nil {
-				log.Fatalf("tarball: Copy() failed: %s", err.Error())
-			}
+			outFile, _ := os.Create(tmpDir + "/" + filepath.Base(header.Name))
+			io.Copy(outFile, tarReader)
 			outFile.Close()
 		}
 
@@ -156,18 +142,22 @@ func extractTarball(machine string) {
 
 }
 
-func populateMachineDir(machine string) {
+func populateMachineDir(machine string) bool {
 
 	homedir, err := os.UserHomeDir()
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	if TestMode {
+		homedir = tmpDir
+	}
+
 	var machinedir = homedir + "/.docker/machine/machines/" + machine + "/"
 	var certsdir = homedir + "/.docker/machine/certs/"
 
-	os.Mkdir(machinedir, 0755)
-	os.Mkdir(certsdir, 0755)
+	os.MkdirAll(machinedir, 0755)
+	os.MkdirAll(certsdir, 0755)
 
 	copyTo(machinedir + "ca.pem")
 	copyTo(machinedir + "cert.pem")
@@ -187,21 +177,18 @@ func populateMachineDir(machine string) {
 	replaceInMachineFile(config, homedir, "${TEMPLATE_HOME_DIR}")
 	replaceInMachineFile(config, machine, "${TEMPLATE_MACHINE_NAME}")
 
+	return true
+
 }
 
 func replaceInMachineFile(file string, new string, old string) {
 
-	input, err := ioutil.ReadFile(file)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	input, _ := ioutil.ReadFile(file)
 
 	var output string = strings.ReplaceAll(string(input), old, new)
 
-	err = ioutil.WriteFile(file, []byte(output), 0644)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	ioutil.WriteFile(file, []byte(output), 0644)
+
 }
 
 func copyTo(dest string) (int64, error) {
@@ -217,20 +204,14 @@ func copyTo(dest string) (int64, error) {
 		return 0, fmt.Errorf("%s is not a regular file", dest)
 	}
 
-	source, err := os.Open(src)
-	if err != nil {
-		return 0, err
-	}
+	source, _ := os.Open(src)
+
 	defer source.Close()
 
-	destination, err := os.Create(dest)
-	if err != nil {
-		return 0, err
-	}
+	destination, _ := os.Create(dest)
+
 	defer destination.Close()
 	nBytes, err := io.Copy(destination, source)
-	if err != nil {
-		return 0, err
-	}
+
 	return nBytes, err
 }

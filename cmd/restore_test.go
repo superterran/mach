@@ -4,6 +4,7 @@ package cmd
 
 import (
 	"bytes"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -57,4 +58,21 @@ func Test_restoreCmd_Help(t *testing.T) {
 	assert.Contains(t, actual, expect,
 		"Command 'help' should show usage",
 	)
+}
+
+func Test_restoreCmd_Dryrun(t *testing.T) {
+
+	TestMode = true
+
+	createTempDirectory()
+
+	extractTarball("example-machine")
+
+	var actual = populateMachineDir("example-machine")
+
+	defer os.RemoveAll(tmpDir)
+
+	if actual == false {
+		assert.FailNow(t, "mach tag returned as expected, %s", actual)
+	}
 }
