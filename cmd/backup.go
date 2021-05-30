@@ -1,5 +1,5 @@
 // Package backup copies docker-machine certs and configurations to S3
-package backup
+package cmd
 
 import (
 	"archive/tar"
@@ -22,39 +22,8 @@ import (
 
 var backupCmd = CreateBackupCmd()
 
-var tmpDir = ""
-
-// TestMode var determines if certain flows actually complete or not for unit testing
-var TestMode = false
-
-// MachineS3Bucket defines which bucket mach interacts with for storing config tarballs, pulled from `machine-s3-bucket` in .mach.conf.yaml
-var MachineS3Bucket string = "mach-docker-machine-certificates"
-
-// MachineS3Region defines which region the bucket is in, pulled from `machine-s3-region` in .mach.conf.yaml
-var MachineS3Region string = "us-east-1"
-
 // CreateBucketFirst will trigger the creation of a bucket before a backup, triggered with cli flag `-c` or `--create`
 var CreateBucketFirst bool = false
-
-// KeepTarball will trigger a clean-up of the tarball, set to true to prevent, or `-k` or `--keep-tarball`
-var KeepTarball bool = false
-
-// path to configruation files
-var cfgFile string
-
-// initConfig reads in config file and ENV variables if set.
-func initConfig() {
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
-	} else {
-		viper.AddConfigPath(".")
-		viper.SetConfigName(".mach")
-	}
-
-	viper.AutomaticEnv()
-	viper.ReadInConfig()
-}
 
 func CreateBackupCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -75,8 +44,6 @@ func init() {
 	TestMode = strings.HasSuffix(os.Args[0], ".test")
 
 	backupCmd.Flags().StringVar(&cfgFile, "config", "", "config file (default is loaded from working dir)")
-
-	initConfig()
 
 	viper.SetDefault("machine-s3-bucket", MachineS3Bucket)
 	MachineS3Bucket = viper.GetString("machine-s3-bucket")
@@ -356,24 +323,4 @@ func uploadFileToBucket(machine string) {
 func exitErrorf(msg string, args ...interface{}) {
 	fmt.Fprintf(os.Stderr, msg+"\n", args...)
 	os.Exit(1)
-}
-
-func createTempDirectory() string {
-	dir, err := ioutil.TempDir("/tmp", "machine")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	tmpDir = dir
-	return tmpDir
-}
-
-func removeMachineArchive(machine string) {
-	if !KeepTarball {
-		e := os.Remove(machine + ".tar.gz")
-		if e != nil {
-			log.Fatal(e)
-		}
-	}
-
 }

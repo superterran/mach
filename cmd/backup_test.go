@@ -1,4 +1,4 @@
-package backup
+package cmd
 
 /* https://github.com/KEINOS/Hello-Cobra */
 

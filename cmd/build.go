@@ -15,7 +15,7 @@ the registry the variant is appended to the image name.
 images/<image_name>/Dockerfile[-<variant>].tpl using the .tpl will process through the templating engine. This
 allows for including partial templates.
 */
-package build
+package cmd
 
 import (
 	"bufio"
@@ -44,13 +44,6 @@ import (
 
 var buildCmd = CreateBuildCmd()
 
-// TestMode var determines if certain flows actually complete or not for unit testing
-var TestMode = false
-
-// OutputOnly will break execution of the build tool and will post the generated dockerfile template to stdout
-// invoke with `-o` or `--outout-only`
-var OutputOnly = false
-
 // FirstOnly will stop the build loop after the first image is found, useful for output only
 var FirstOnly = false
 
@@ -74,23 +67,6 @@ var DockerRegistry = "superterran/mach"
 
 // lastOutput is a buffer for the last output generated, `buffer-empty` is just a placeholder
 var lastOutput string = "buffer-empty"
-
-// path to configruation files
-var cfgFile string
-
-// initConfig reads in config file and ENV variables if set.
-func initConfig() {
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
-	} else {
-		viper.AddConfigPath(".")
-		viper.SetConfigName(".mach")
-	}
-
-	viper.AutomaticEnv()
-	viper.ReadInConfig()
-}
 
 type errorLine struct {
 	Error       string      `json:"error"`
@@ -204,13 +180,13 @@ func MainBuildFlow(args []string) error {
 	return nil
 }
 
-// generateTemplate grabs the docker tpl file, and any tpl files in the `includes` sub directory with the
+// generateDockerfileTemplate grabs the docker tpl file, and any tpl files in the `includes` sub directory with the
 // docerfile, and runs them through a templater to produce the output for a dockerfile to be built.
 // this method uses the `html/template` package https://golang.org/pkg/html/template/ so this should be
 // fairly flexible. I intentionally haven't introduced outside variables to the templating engine i.e.
 // host system environment variables. This may come in time, but Dockerfiles should not contain secrets so
 // I'm not sure if this is a good feature to introduce.
-func generateTemplate(wr io.Writer, filename string) {
+func generateDockerfileTemplate(wr io.Writer, filename string) {
 
 	tpl, err := template.ParseGlob(filename)
 	if err != nil {
@@ -298,7 +274,7 @@ func buildImage(filename string) string {
 
 	if OutputOnly || TestMode {
 
-		generateTemplate(os.Stdout, filename)
+		generateDockerfileTemplate(os.Stdout, filename)
 		return mach_tag
 
 	} else {
@@ -307,7 +283,7 @@ func buildImage(filename string) string {
 			log.Fatal(err)
 		}
 
-		generateTemplate(f, filename)
+		generateDockerfileTemplate(f, filename)
 
 		f.Close()
 	}

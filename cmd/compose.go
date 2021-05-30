@@ -1,5 +1,5 @@
 // Package compose is a passthru for `docker compose` command that (will) support templates
-package compose
+package cmd
 
 import (
 	"fmt"
@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 	"text/template"
 
 	"github.com/spf13/cobra"
@@ -19,32 +18,13 @@ var composeCmd = CreateComposeCmd()
 // ComposeDirname is the bas directory for compositions, could be set to `composes` in .mach.yaml
 var ComposeDirname = "."
 
-// TestMode var determines if certain flows actually complete or not for unit testing
-var TestMode = false
-
-// path to configruation files
-var cfgFile string
-
-// initConfig reads in config file and ENV variables if set.
-func initConfig() {
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
-	} else {
-		viper.AddConfigPath(".")
-		viper.SetConfigName(".mach")
-	}
-
-	viper.AutomaticEnv()
-	viper.ReadInConfig()
-}
-
 func CreateComposeCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "compose <docker-compose> $@",
 		Short: "Runs docker compose on compositions in a directory.",
 		Long:  ``,
 		RunE: func(cmd *cobra.Command, args []string) error {
+
 			return runCompose(cmd, args)
 		},
 	}
@@ -53,14 +33,15 @@ func CreateComposeCmd() *cobra.Command {
 
 func init() {
 
-	TestMode = strings.HasSuffix(os.Args[0], ".test")
-
 	composeCmd.Flags().StringVar(&cfgFile, "config", "", "config file (default is loaded from working dir)")
-
-	initConfig()
 
 	viper.SetDefault("ComposeDirname", ComposeDirname)
 	ComposeDirname = viper.GetString("ComposeDirname")
+
+	composeCmd.Flags().BoolP("output-only", "o", false, "send output to stdout, do not build")
+	OutputOnly, _ = composeCmd.Flags().GetBool("output-only")
+
+	initConfig()
 
 }
 
@@ -110,29 +91,36 @@ func RunCompose(composition string, args []string) {
 	composeDir, _ = filepath.Abs(composeDir)
 
 	if _, err := os.Stat(composeDir + "/docker-compose.yml.tpl"); err == nil {
-		generateTemplate(composeDir + "/docker-compose.yml.tpl")
+		generateCompositionTemplate(composeDir + "/docker-compose.yml.tpl")
 	}
 
 	s := []string{"up", "down", "ps"}
 	if contains(s, args[0]) {
 
-		cmd := exec.Command(baseCmd, args...)
-		cmd.Dir = composeDir
-		out, _ := cmd.CombinedOutput()
+		if OutputOnly != false {
+			cmd := exec.Command(baseCmd, args...)
+			cmd.Dir = composeDir
+			out, _ := cmd.CombinedOutput()
 
-		fmt.Println(string(out))
-
+			fmt.Println(string(out))
+		}
 	}
 
 }
 
-func generateTemplate(filename string) {
+func generateCompositionTemplate(filename string) {
 
 	generateFilename := filepath.Dir(filename) + "/docker-compose.yml"
 
-	wr, err := os.Create(generateFilename)
-	if err != nil {
-		log.Fatal(err)
+	wr := os.Stdout
+
+	if !OutputOnly {
+		wr, err := os.Create(generateFilename)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		_ = wr
 	}
 
 	tpl, err := template.ParseGlob(filename)
@@ -143,8 +131,9 @@ func generateTemplate(filename string) {
 	tpl.ParseGlob(filepath.Dir(filename) + "/includes/*.tpl")
 	tpl.Execute(wr, filepath.Base(filename))
 
-	wr.Close()
-
+	if !OutputOnly {
+		wr.Close()
+	}
 }
 
 func contains(s []string, str string) bool {

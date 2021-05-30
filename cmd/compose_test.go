@@ -1,4 +1,4 @@
-package compose
+package cmd
 
 /* https://github.com/KEINOS/Hello-Cobra */
 

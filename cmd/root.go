@@ -2,17 +2,34 @@ package cmd
 
 import (
 	"fmt"
+	"io/ioutil"
+	"log"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/superterran/mach/cmd/backup"
-	"github.com/superterran/mach/cmd/build"
-	"github.com/superterran/mach/cmd/compose"
-	"github.com/superterran/mach/cmd/restore"
 )
 
 var cfgFile string
+
+// TestMode var determines if certain flows actually complete or not for unit testing
+var TestMode = false
+
+var tmpDir = ""
+
+// MachineS3Bucket defines which bucket mach interacts with for storing config tarballs, pulled from `machine-s3-bucket` in .mach.conf.yaml
+var MachineS3Bucket string = "mach-docker-machine-certificates"
+
+// MachineS3Region defines which region the bucket is in, pulled from `machine-s3-region` in .mach.conf.yaml
+var MachineS3Region string = "us-east-1"
+
+// KeepTarball will trigger a clean-up of the tarball, set to true to prevent, or `-k` or `--keep-tarball`
+var KeepTarball bool = false
+
+// OutputOnly will break execution of the build tool and will post the generated dockerfile template to stdout
+// invoke with `-o` or `--outout-only`
+var OutputOnly = false
 
 var rootCmd = &cobra.Command{
 	Use:   "mach",
@@ -33,15 +50,16 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	initConfig()
+	// initConfig()
+
+	TestMode = strings.HasSuffix(os.Args[0], ".test")
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is loaded from working dir)")
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 
-	rootCmd.AddCommand(build.CreateBuildCmd())
-	rootCmd.AddCommand(backup.CreateBackupCmd())
-	rootCmd.AddCommand(restore.CreateRestoreCmd())
-	rootCmd.AddCommand(compose.CreateComposeCmd())
+	rootCmd.AddCommand(CreateBuildCmd())
+	rootCmd.AddCommand(CreateBackupCmd())
+	rootCmd.AddCommand(CreateRestoreCmd())
+	rootCmd.AddCommand(CreateComposeCmd())
 
 }
 
@@ -54,4 +72,21 @@ func initConfig() {
 
 	viper.AutomaticEnv()
 	viper.ReadInConfig()
+}
+
+func createTempDirectory() string {
+	dir, err := ioutil.TempDir("/tmp", "machine")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	tmpDir = dir
+	return tmpDir
+}
+
+func removeMachineArchive(machine string) {
+	e := os.Remove(machine + ".tar.gz")
+	if e != nil {
+		log.Fatal(e)
+	}
 }

@@ -1,4 +1,4 @@
-package build
+package cmd
 
 /* https://github.com/KEINOS/Hello-Cobra */
 

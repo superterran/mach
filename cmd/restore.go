@@ -1,5 +1,5 @@
 // Package restore copies docker-machine certs and configurations from S3 and applies them to the host
-package restore
+package cmd
 
 import (
 	"archive/tar"
@@ -19,37 +19,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
-
-var tmpDir = ""
-
-// TestMode var determines if certain flows actually complete or not for unit testing
-var TestMode = false
-
-// MachineS3Bucket defines which bucket mach interacts with for storing config tarballs, pulled from `machine-s3-bucket` in .mach.conf.yaml
-var MachineS3Bucket string = "mach-docker-machine-certificates"
-
-// MachineS3Region defines which region the bucket is in, pulled from `machine-s3-region` in .mach.conf.yaml
-var MachineS3Region string = "us-east-1"
-
-// KeepTarball will trigger a clean-up of the tarball, set to true to prevent, or `-k` or `--keep-tarball`
-var KeepTarball bool = false
-
-// path to configruation files
-var cfgFile string
-
-// initConfig reads in config file and ENV variables if set.
-func initConfig() {
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
-	} else {
-		viper.AddConfigPath(".")
-		viper.SetConfigName(".mach")
-	}
-
-	viper.AutomaticEnv()
-	viper.ReadInConfig()
-}
 
 var restoreCmd = CreateRestoreCmd()
 
@@ -265,21 +234,4 @@ func copyTo(dest string) (int64, error) {
 		return 0, err
 	}
 	return nBytes, err
-}
-
-func createTempDirectory() string {
-	dir, err := ioutil.TempDir("/tmp", "machine")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	tmpDir = dir
-	return tmpDir
-}
-
-func removeMachineArchive(machine string) {
-	e := os.Remove(machine + ".tar.gz")
-	if e != nil {
-		log.Fatal(e)
-	}
 }
