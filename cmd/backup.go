@@ -25,6 +25,8 @@ var backupCmd = CreateBackupCmd()
 // CreateBucketFirst will trigger the creation of a bucket before a backup, triggered with cli flag `-c` or `--create`
 var CreateBucketFirst bool = false
 
+var HomeDir string
+
 func CreateBackupCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "backup <docker-machine>",
@@ -71,6 +73,8 @@ func runBackup(cmd *cobra.Command, args []string) error {
 		fmt.Println("--keep-tarball set")
 	}
 
+	HomeDir, _ = os.UserHomeDir()
+
 	if CreateBucketFirst {
 		createBucket()
 	}
@@ -95,15 +99,14 @@ func runBackup(cmd *cobra.Command, args []string) error {
 
 // populateTempDir copies the relevant files from ~/.docker/machine/ to the tmp directory and
 // triggers replaceIntTempFile
-func populateTempDir(machine string) {
+func populateTempDir(machine string) bool {
 
-	homedir, err := os.UserHomeDir()
-	if err != nil {
-		log.Fatal(err)
+	if TestMode {
+		HomeDir = "../examples"
 	}
 
-	var machinedir = homedir + "/.docker/machine/machines/" + machine + "/"
-	var certsdir = homedir + "/.docker/machine/certs/"
+	var machinedir = HomeDir + "/.docker/machine/machines/" + machine + "/"
+	var certsdir = HomeDir + "/.docker/machine/certs/"
 
 	copy(machinedir + "ca.pem")
 	copy(machinedir + "cert.pem")
@@ -120,8 +123,10 @@ func populateTempDir(machine string) {
 	var config = machinedir + "config.json"
 
 	copy(config)
-	replaceInTempFile(config, homedir, "${TEMPLATE_HOME_DIR}")
+	replaceInTempFile(config, HomeDir, "${TEMPLATE_HOME_DIR}")
 	replaceInTempFile(config, machine, "${TEMPLATE_MACHINE_NAME}")
+
+	return true
 
 }
 
@@ -171,7 +176,7 @@ func copy(src string) (int64, error) {
 	return nBytes, err
 }
 
-func createMachineTarball(machine string) {
+func createMachineTarball(machine string) bool {
 	// Files which to include in the tar.gz archive
 	var files []string
 
@@ -196,6 +201,8 @@ func createMachineTarball(machine string) {
 	if err != nil {
 		log.Fatalln("Error creating archive:", err)
 	}
+
+	return true
 }
 
 // createArchive makes a tarball out of the contents of temp directory

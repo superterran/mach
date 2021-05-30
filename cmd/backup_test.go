@@ -4,6 +4,7 @@ package cmd
 
 import (
 	"bytes"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -57,4 +58,21 @@ func Test_backupCmd_Help(t *testing.T) {
 	assert.Contains(t, actual, expect,
 		"Command 'help' should show usage",
 	)
+}
+
+func Test_backupCmd_PopulateTestDir(t *testing.T) {
+
+	OutputOnly = false
+	TestMode = true
+
+	createTempDirectory()
+
+	populateTempDir("example-machine")
+	var actual = createMachineTarball("example-machine")
+
+	defer os.RemoveAll(tmpDir)
+
+	if actual == false {
+		assert.FailNow(t, "mach tag returned as expected, %s", actual)
+	}
 }
