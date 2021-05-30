@@ -1,4 +1,4 @@
-// Package backup copies docker-machine certs and configurations to S3
+// Cmd backup copies docker-machine certs and configurations to S3
 package cmd
 
 import (

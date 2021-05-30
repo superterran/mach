@@ -1,4 +1,4 @@
-// Package restore copies docker-machine certs and configurations from S3 and applies them to the host
+// Cmd restore copies docker-machine certs and configurations from S3 and applies them to the host
 package cmd
 
 import (

@@ -1,4 +1,4 @@
-// Package compose is a passthru for `docker compose` command that (will) support templates
+// Cmd compose is a passthru for `docker compose` command that (will) support templates
 package cmd
 
 import (

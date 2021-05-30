@@ -1,5 +1,5 @@
 /*
-Package build generates docker images, using templates, and pushes them to a registry. This provides a useful
+Cmd build generates docker images, using templates, and pushes them to a registry. This provides a useful
 method to rapidly build images with variants, and manage them in a git repository. Dockerfiles can be made
 supporting includes, conditionals, loops, etc.
 
