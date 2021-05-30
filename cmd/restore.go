@@ -38,11 +38,7 @@ systems using the AWS API. Will require progamtic credetials with permissions to
 
 func init() {
 
-	TestMode = strings.HasSuffix(os.Args[0], ".test")
-
-	restoreCmd.Flags().StringVar(&cfgFile, "config", "", "config file (default is loaded from working dir)")
-
-	initConfig()
+	rootCmd.AddCommand(restoreCmd)
 
 	viper.SetDefault("machine-s3-bucket", MachineS3Bucket)
 	MachineS3Bucket = viper.GetString("machine-s3-bucket")

@@ -56,10 +56,10 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is loaded from working dir)")
 
-	rootCmd.AddCommand(CreateBuildCmd())
-	rootCmd.AddCommand(CreateBackupCmd())
-	rootCmd.AddCommand(CreateRestoreCmd())
-	rootCmd.AddCommand(CreateComposeCmd())
+	// rootCmd.AddCommand(CreateBuildCmd())
+	// rootCmd.AddCommand(CreateBackupCmd())
+	// rootCmd.AddCommand(CreateRestoreCmd())
+	// rootCmd.AddCommand(CreateComposeCmd())
 
 }
 

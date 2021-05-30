@@ -33,15 +33,13 @@ func CreateComposeCmd() *cobra.Command {
 
 func init() {
 
-	composeCmd.Flags().StringVar(&cfgFile, "config", "", "config file (default is loaded from working dir)")
+	rootCmd.AddCommand(composeCmd)
 
 	viper.SetDefault("ComposeDirname", ComposeDirname)
 	ComposeDirname = viper.GetString("ComposeDirname")
 
 	composeCmd.Flags().BoolP("output-only", "o", false, "send output to stdout, do not build")
 	OutputOnly, _ = composeCmd.Flags().GetBool("output-only")
-
-	initConfig()
 
 }
 

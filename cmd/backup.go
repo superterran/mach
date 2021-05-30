@@ -41,7 +41,7 @@ systems using the AWS API. Will require programmatic credentials with permission
 
 func init() {
 
-	TestMode = strings.HasSuffix(os.Args[0], ".test")
+	rootCmd.AddCommand(backupCmd)
 
 	backupCmd.Flags().StringVar(&cfgFile, "config", "", "config file (default is loaded from working dir)")
 

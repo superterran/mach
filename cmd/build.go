@@ -92,11 +92,9 @@ func CreateBuildCmd() *cobra.Command {
 
 func init() {
 
-	TestMode = strings.HasSuffix(os.Args[0], ".test")
+	rootCmd.AddCommand(buildCmd)
 
 	buildCmd.Flags().StringVar(&cfgFile, "config", "", "config file (default is loaded from working dir)")
-
-	initConfig()
 
 	buildCmd.Flags().BoolP("no-push", "n", Nopush, "Do not push to registry")
 	Nopush, _ = buildCmd.Flags().GetBool("no-push")
