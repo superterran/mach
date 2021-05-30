@@ -41,20 +41,23 @@ func init() {
 	rootCmd.AddCommand(restoreCmd)
 
 	viper.SetDefault("machine-s3-bucket", MachineS3Bucket)
-	MachineS3Bucket = viper.GetString("machine-s3-bucket")
 
 	viper.SetDefault("machine-s3-region", MachineS3Region)
-	MachineS3Region = viper.GetString("machine-s3-region")
 
 	restoreCmd.Flags().BoolP("keep-tarball", "k", KeepTarball, "keeps the tarball in working directory after upload")
-	KeepTarball, _ := restoreCmd.Flags().GetBool("keep-tarball")
-	if KeepTarball {
-		fmt.Println("--keep-tarball set")
-	}
 
 }
 
 func runRestore(cmd *cobra.Command, args []string) error {
+
+	MachineS3Bucket = viper.GetString("machine-s3-bucket")
+
+	MachineS3Region = viper.GetString("machine-s3-region")
+
+	KeepTarball, _ := cmd.Flags().GetBool("keep-tarball")
+	if KeepTarball {
+		fmt.Println("--keep-tarball set")
+	}
 
 	if len(args) == 1 {
 

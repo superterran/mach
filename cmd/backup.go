@@ -46,25 +46,30 @@ func init() {
 	backupCmd.Flags().StringVar(&cfgFile, "config", "", "config file (default is loaded from working dir)")
 
 	viper.SetDefault("machine-s3-bucket", MachineS3Bucket)
-	MachineS3Bucket = viper.GetString("machine-s3-bucket")
 
 	viper.SetDefault("machine-s3-region", MachineS3Region)
-	MachineS3Region = viper.GetString("machine-s3-region")
 
 	backupCmd.Flags().BoolP("create", "c", CreateBucketFirst, "create the bucket before attempting backup")
-	CreateBucketFirst, _ = backupCmd.Flags().GetBool("create")
 
 	backupCmd.Flags().BoolP("keep-tarball", "k", KeepTarball, "keeps the tarball in working directory after upload")
-	KeepTarball, _ := backupCmd.Flags().GetBool("keep-tarball")
-	if KeepTarball {
-		fmt.Println("--keep-tarball set")
-	}
+
 }
 
 // runBackup is the main command flow, it will attempt to create an S3 bucket if
 // the flag is set, then it will create a temp directory, populate it with the
 // machine config, tarball it, and push to S3, and delete the temp files created
 func runBackup(cmd *cobra.Command, args []string) error {
+
+	MachineS3Bucket = viper.GetString("machine-s3-bucket")
+
+	MachineS3Region = viper.GetString("machine-s3-region")
+
+	CreateBucketFirst, _ = cmd.Flags().GetBool("create")
+
+	KeepTarball, _ := cmd.Flags().GetBool("keep-tarball")
+	if KeepTarball {
+		fmt.Println("--keep-tarball set")
+	}
 
 	if CreateBucketFirst {
 		createBucket()

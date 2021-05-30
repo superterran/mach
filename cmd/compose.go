@@ -36,14 +36,16 @@ func init() {
 	rootCmd.AddCommand(composeCmd)
 
 	viper.SetDefault("ComposeDirname", ComposeDirname)
-	ComposeDirname = viper.GetString("ComposeDirname")
 
 	composeCmd.Flags().BoolP("output-only", "o", false, "send output to stdout, do not build")
-	OutputOnly, _ = composeCmd.Flags().GetBool("output-only")
 
 }
 
 func runCompose(cmd *cobra.Command, args []string) error {
+
+	ComposeDirname = viper.GetString("ComposeDirname")
+
+	OutputOnly, _ = cmd.Flags().GetBool("output-only")
 
 	return MainComposeFlow(args)
 }

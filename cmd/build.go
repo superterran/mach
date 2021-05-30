@@ -97,28 +97,18 @@ func init() {
 	buildCmd.Flags().StringVar(&cfgFile, "config", "", "config file (default is loaded from working dir)")
 
 	buildCmd.Flags().BoolP("no-push", "n", Nopush, "Do not push to registry")
-	Nopush, _ = buildCmd.Flags().GetBool("no-push")
-	_ = Nopush
 
 	buildCmd.Flags().BoolP("output-only", "o", OutputOnly, "send output to stdout, do not build")
-	OutputOnly, _ = buildCmd.Flags().GetBool("output-only")
-	_ = OutputOnly
 
 	buildCmd.Flags().BoolP("first-only", "f", FirstOnly, "stop the build loop after the first image is found")
-	FirstOnly, _ = buildCmd.Flags().GetBool("first-only")
-	_ = FirstOnly
 
 	viper.SetDefault("BuildImageDirname", BuildImageDirname)
-	BuildImageDirname = viper.GetString("BuildImageDirname")
 
 	viper.SetDefault("defaultGitBranch", DefaultGitBranch)
-	DefaultGitBranch = DefaultGitBranch
 
 	viper.SetDefault("docker_host", DockerHost)
-	DockerHost = viper.GetString("docker_host")
 
 	viper.SetDefault("docker_registry", DockerRegistry)
-	DockerRegistry = viper.GetString("docker_registry")
 
 }
 
@@ -127,6 +117,18 @@ func init() {
 // it will attempt to match the strings with dockerfiles and build those only. This method sets several flags,
 // OutputOnly is suitable for leveraging the stdout which provides the contents of a templated dockerfile.
 func runBuild(cmd *cobra.Command, args []string) error {
+
+	Nopush, _ = cmd.Flags().GetBool("no-push")
+
+	OutputOnly, _ = cmd.Flags().GetBool("output-only")
+
+	FirstOnly, _ = cmd.Flags().GetBool("first-only")
+
+	BuildImageDirname = viper.GetString("BuildImageDirname")
+
+	DockerHost = viper.GetString("docker_host")
+
+	DockerRegistry = viper.GetString("docker_registry")
 
 	return MainBuildFlow(args)
 }
