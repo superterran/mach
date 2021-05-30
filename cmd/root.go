@@ -50,16 +50,9 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	// initConfig()
-
 	TestMode = strings.HasSuffix(os.Args[0], ".test")
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is loaded from working dir)")
-
-	// rootCmd.AddCommand(CreateBuildCmd())
-	// rootCmd.AddCommand(CreateBackupCmd())
-	// rootCmd.AddCommand(CreateRestoreCmd())
-	// rootCmd.AddCommand(CreateComposeCmd())
 
 }
 
@@ -70,6 +63,7 @@ func initConfig() {
 		viper.SetConfigName(".mach")
 	}
 
+	viper.AddConfigPath(".")
 	viper.AutomaticEnv()
 	viper.ReadInConfig()
 }
