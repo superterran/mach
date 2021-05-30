@@ -256,60 +256,44 @@ func buildImage(filename string) string {
 		color.HiYellow("Building image with tag " + mach_tag)
 	}
 
-	var DockerFilename string = filepath.Dir(filename) + "/." + filepath.Base(filename) + ".generated"
-
 	if OutputOnly || TestMode {
 
 		generateDockerfileTemplate(os.Stdout, filename)
 		return mach_tag
 
-	} else {
-		f, err := os.Create(DockerFilename)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		generateDockerfileTemplate(f, filename)
-
-		f.Close()
 	}
 
-	if !TestMode {
-		tar, err := archive.TarWithOptions(filepath.Dir(DockerFilename), &archive.TarOptions{})
-		if err != nil {
-			log.Fatal(err)
-		}
+	var DockerFilename string = filepath.Dir(filename) + "/." + filepath.Base(filename) + ".generated"
 
-		opts := types.ImageBuildOptions{
-			Dockerfile: filepath.Base(DockerFilename),
-			Remove:     true,
-			Tags:       []string{mach_tag},
-		}
+	f, _ := os.Create(DockerFilename)
+	generateDockerfileTemplate(f, filename)
 
-		ctx := context.Background()
-		cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-		if err != nil {
-			log.Fatal(err)
-		}
+	f.Close()
 
-		res, err := cli.ImageBuild(ctx, tar, opts)
+	tar, _ := archive.TarWithOptions(filepath.Dir(DockerFilename), &archive.TarOptions{})
 
-		if err != nil {
-			log.Fatal(err)
-		}
+	opts := types.ImageBuildOptions{
+		Dockerfile: filepath.Base(DockerFilename),
+		Remove:     true,
+		Tags:       []string{mach_tag},
+	}
 
-		scanner := bufio.NewScanner(res.Body)
-		for scanner.Scan() {
+	ctx := context.Background()
+	cli, _ := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 
-			var lastLine = scanner.Text()
+	res, _ := cli.ImageBuild(ctx, tar, opts)
 
-			errLine := &errorLine{}
-			json.Unmarshal([]byte(lastLine), errLine)
-			if errLine.Error != "" {
-				log.Fatal(color.RedString(errLine.Error))
-			} else {
-				dockerLog(scanner.Text())
-			}
+	scanner := bufio.NewScanner(res.Body)
+	for scanner.Scan() {
+
+		var lastLine = scanner.Text()
+
+		errLine := &errorLine{}
+		json.Unmarshal([]byte(lastLine), errLine)
+		if errLine.Error != "" {
+			log.Fatal(color.RedString(errLine.Error))
+		} else {
+			dockerLog(scanner.Text())
 		}
 	}
 

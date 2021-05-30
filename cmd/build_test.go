@@ -176,3 +176,65 @@ func Test_buildCmdOneArgWithImagesOutputOnlyWithTag(t *testing.T) {
 		assert.FailNowf(t, "returned not nil.", "Error msg: %v", actual)
 	}
 }
+
+func Test_buildCmdOneArgWithImagesOutputOnlyWithTagReal(t *testing.T) {
+
+	OutputOnly = false
+	TestMode = false
+
+	var actual = buildImage("../examples/images/example/Dockerfile")
+
+	if actual != "superterran/mach:example" {
+		assert.FailNowf(t, "mach tag returned as expected, %s", actual)
+	}
+}
+
+func Test_buildCmdOneArgWithImagesOutputOnlyWithTagRealTemplate(t *testing.T) {
+
+	OutputOnly = false
+	TestMode = false
+
+	var actual = buildImage("../examples/images/example/Dockerfile-template.tpl")
+
+	if actual != "superterran/mach:example-template" {
+		assert.FailNowf(t, "mach tag returned as expected, %s", actual)
+	}
+}
+
+func Test_buildCmdOneArgWithImagesOutputOnlyWithTagRealOutputOnly(t *testing.T) {
+
+	OutputOnly = true
+	TestMode = false
+
+	var actual = buildImage("../examples/images/example/Dockerfile")
+
+	if actual != "superterran/mach:example" {
+		assert.FailNowf(t, "mach tag returned as expected, %s", actual)
+	}
+}
+
+func Test_buildCmdOneArgWithImagesOutputOnlyWithTagRealTemplateOutputOnly(t *testing.T) {
+
+	OutputOnly = true
+	TestMode = false
+
+	var actual = buildImage("../examples/images/example/Dockerfile-template.tpl")
+
+	if actual != "superterran/mach:example-template" {
+		assert.FailNowf(t, "mach tag returned as expected, %s", actual)
+	}
+}
+
+func Test_buildCmdOneArgWithImagesAndPush(t *testing.T) {
+
+	OutputOnly = false
+	TestMode = false
+	Nopush = false
+
+	var tag = buildImage("../examples/images/example/Dockerfile-template.tpl")
+	var actual = pushImage(tag)
+
+	if actual != "push complete" {
+		assert.FailNowf(t, "mach tag returned as expected, %s", actual)
+	}
+}
