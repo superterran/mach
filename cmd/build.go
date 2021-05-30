@@ -1,20 +1,4 @@
-/*
-Cmd build generates docker images, using templates, and pushes them to a registry. This provides a useful
-method to rapidly build images with variants, and manage them in a git repository. Dockerfiles can be made
-supporting includes, conditionals, loops, etc.
-
-Each image should get it's own directory in the images directory, by default the current working dir. If mach
-build is ran with no arguments, it will try to build every image discovered.
-
-images/<image_name>/Dockerfile is the default image to be built, this is a proper Dockerfile and should not
-use the templating system.
-
-images/<image_name>/Dockerfile-<variant> The variant can be used to build alternate images, when pushed to
-the registry the variant is appended to the image name.
-
-images/<image_name>/Dockerfile[-<variant>].tpl using the .tpl will process through the templating engine. This
-allows for including partial templates.
-*/
+// Cmd build generates docker images, using templates, and pushes them to a registry
 package cmd
 
 import (
@@ -133,6 +117,8 @@ func runBuild(cmd *cobra.Command, args []string) error {
 	return MainBuildFlow(args)
 }
 
+// MainBuildFlow will run builds against an array of arguments, if no arguments are supplied
+// it will iterate through the build directory
 func MainBuildFlow(args []string) error {
 	if OutputOnly {
 		TestMode = true

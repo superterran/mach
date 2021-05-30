@@ -1,4 +1,4 @@
-// Cmd compose is a passthru for `docker compose` command that (will) support templates
+// Cmd compose is a passthru for `docker compose` command that supports templates
 package cmd
 
 import (
@@ -50,6 +50,8 @@ func runCompose(cmd *cobra.Command, args []string) error {
 	return MainComposeFlow(args)
 }
 
+// MainComposeFlow builds and runs compositions against an array of arguments. If none are passed,
+// it will iterate  through all compositons in the compose dir
 func MainComposeFlow(args []string) error {
 
 	s := []string{"up", "down", "ps"}
