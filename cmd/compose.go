@@ -3,7 +3,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -37,7 +36,9 @@ func init() {
 
 	viper.SetDefault("ComposeDirname", ComposeDirname)
 
-	composeCmd.Flags().BoolP("output-only", "o", false, "send output to stdout, do not build")
+	composeCmd.Flags().BoolP("output-only", "o", OutputOnly, "send output to stdout, do not build")
+
+	composeCmd.Flags().BoolP("first-only", "f", FirstOnly, "stop the build loop after the first image is found")
 
 }
 
@@ -46,6 +47,8 @@ func runCompose(cmd *cobra.Command, args []string) error {
 	ComposeDirname = viper.GetString("ComposeDirname")
 
 	OutputOnly, _ = cmd.Flags().GetBool("output-only")
+
+	FirstOnly, _ = cmd.Flags().GetBool("first-only")
 
 	return MainComposeFlow(args)
 }
@@ -73,6 +76,10 @@ func MainComposeFlow(args []string) error {
 				composeArgs := args[0:]
 				RunCompose(composition, composeArgs)
 
+				if FirstOnly {
+					break
+				}
+
 			}
 
 		}
@@ -99,7 +106,7 @@ func RunCompose(composition string, args []string) {
 	s := []string{"up", "down", "ps"}
 	if contains(s, args[0]) {
 
-		if OutputOnly != false {
+		if !OutputOnly {
 			cmd := exec.Command(baseCmd, args...)
 			cmd.Dir = composeDir
 			out, _ := cmd.CombinedOutput()
@@ -117,12 +124,7 @@ func generateCompositionTemplate(filename string) {
 	wr := os.Stdout
 
 	if !OutputOnly {
-		wr, err := os.Create(generateFilename)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		_ = wr
+		wr, _ = os.Create(generateFilename)
 	}
 
 	tpl, err := template.ParseGlob(filename)
