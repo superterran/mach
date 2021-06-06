@@ -106,6 +106,8 @@ func RunCompose(composition string, args []string) {
 	s := []string{"up", "down", "ps"}
 	if contains(s, args[0]) {
 
+		args = append(args, "-d")
+
 		if !OutputOnly {
 			cmd := exec.Command(baseCmd, args...)
 			cmd.Dir = composeDir
