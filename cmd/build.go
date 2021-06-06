@@ -360,7 +360,9 @@ func pushImage(mach_tag string) string {
 
 	err = jsonmessage.DisplayJSONMessagesStream(rd, os.Stderr, termFd, isTerm, nil)
 	if err != nil {
-		log.Fatal(err)
+		if !TestMode {
+			log.Fatal(err)
+		}
 	}
 
 	defer rd.Close()
