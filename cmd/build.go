@@ -358,10 +358,12 @@ func pushImage(mach_tag string) string {
 
 	termFd, isTerm := term.GetFdInfo(os.Stderr)
 
-	jsonmessage.DisplayJSONMessagesStream(rd, os.Stderr, termFd, isTerm, nil)
+	err = jsonmessage.DisplayJSONMessagesStream(rd, os.Stderr, termFd, isTerm, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	defer rd.Close()
-
 	return "push complete"
 }
 
