@@ -22,3 +22,4 @@ coverage.txt
 *.tar.gz
 coverage
 examples/*/docker-machine.yml
+.envrc

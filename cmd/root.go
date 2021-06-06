@@ -71,6 +71,7 @@ func initConfig() {
 	}
 
 	viper.AddConfigPath(".")
+	viper.SetEnvPrefix("MACH")
 	viper.AutomaticEnv()
 	viper.ReadInConfig()
 }
