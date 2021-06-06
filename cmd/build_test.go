@@ -4,6 +4,7 @@ package cmd
 
 import (
 	"bytes"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -231,8 +232,8 @@ func Test_buildCmdOneArgWithImagesAndPush(t *testing.T) {
 	TestMode = false
 	Nopush = false
 
-	// DockerUser = os.Getenv("MACH_DOCKER_USER")
-	// DockerPassword = os.Getenv("MACH_DOCKER_PASS")
+	DockerUser = os.Getenv("MACH_DOCKER_USER")
+	DockerPassword = os.Getenv("MACH_DOCKER_PASS")
 
 	var tag = buildImage("../examples/images/example/Dockerfile-template.tpl")
 	var actual = pushImage(tag)
