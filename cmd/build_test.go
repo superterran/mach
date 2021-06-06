@@ -4,7 +4,6 @@ package cmd
 
 import (
 	"bytes"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -222,23 +221,6 @@ func Test_buildCmdOneArgWithImagesOutputOnlyWithTagRealTemplateOutputOnly(t *tes
 	var actual = buildImage("../examples/images/example/Dockerfile-template.tpl")
 
 	if actual != "superterran/mach:example-template" {
-		assert.FailNowf(t, "mach tag returned as expected, %s", actual)
-	}
-}
-
-func Test_buildCmdOneArgWithImagesAndPush(t *testing.T) {
-
-	OutputOnly = false
-	TestMode = false
-	Nopush = false
-
-	DockerUser = os.Getenv("MACH_DOCKER_USER")
-	DockerPassword = os.Getenv("MACH_DOCKER_PASS")
-
-	var tag = buildImage("../examples/images/example/Dockerfile-template.tpl")
-	var actual = pushImage(tag)
-
-	if actual != "push complete" {
 		assert.FailNowf(t, "mach tag returned as expected, %s", actual)
 	}
 }
