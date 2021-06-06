@@ -55,7 +55,7 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
+	cobra.OnInitialize(InitConfig)
 
 	TestMode = strings.HasSuffix(os.Args[0], ".test")
 
@@ -63,7 +63,7 @@ func init() {
 
 }
 
-func initConfig() {
+func InitConfig() {
 	if cfgFile != "" {
 		viper.SetConfigFile(cfgFile)
 	} else {
