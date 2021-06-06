@@ -29,7 +29,7 @@ import (
 var buildCmd = CreateBuildCmd()
 
 // FirstOnly will stop the build loop after the first image is found, useful for output only
-var FirstOnly = false
+var FirstOnly bool = false
 
 // Nopush builds the image, but does not push to a registry. Set with `--no-push` or `-n`
 var Nopush bool = false
@@ -47,13 +47,13 @@ var DefaultGitBranch string = "main"
 var DockerHost string = "https://index.docker.io/v1/"
 
 // DockerRegistry is the package name inside the docker registry. @todo think through a better name
-var DockerRegistry = "superterran/mach"
+var DockerRegistry string = "superterran/mach"
 
 // DockerUser is the registry username
-var DockerUser = ""
+var DockerUser string = ""
 
 // DockerPassword is the registry password
-var DockerPassword = ""
+var DockerPassword string = ""
 
 // Verbose removes the terminal formatting for builds, displaying the entire output to the user
 var Verbose bool = false
@@ -99,21 +99,29 @@ func init() {
 
 	buildCmd.Flags().BoolP("verbose", "v", Verbose, "show entire build output")
 
+	buildCmd.Flags().StringVar(&BuildImageDirname, "build-image-dir-name", BuildImageDirname, "build Image directory")
 	viper.SetDefault("BuildImageDirname", BuildImageDirname)
+	viper.BindPFlag("BuildImageDirname", buildCmd.Flags().Lookup("build-image-dir-name"))
 
+	buildCmd.Flags().StringVar(&DefaultGitBranch, "default-git-branch", DefaultGitBranch, "default git branch")
 	viper.SetDefault("defaultGitBranch", DefaultGitBranch)
+	viper.BindPFlag("defaultGitBranch", buildCmd.Flags().Lookup("default-git-branch"))
 
-	viper.SetDefault("docker_registry", DockerRegistry)
 	buildCmd.Flags().StringVar(&DockerRegistry, "docker-registry", DockerRegistry, "docker registry")
+	viper.SetDefault("docker_registry", DockerRegistry)
+	viper.BindPFlag("docker_registry", buildCmd.Flags().Lookup("docker-registry"))
 
-	viper.SetDefault("docker_host", DockerHost)
 	buildCmd.Flags().StringVar(&DockerHost, "docker-host", DockerHost, "docker registry hostname")
+	viper.SetDefault("docker_host", DockerHost)
+	viper.BindPFlag("docker_host", buildCmd.Flags().Lookup("docker-host"))
 
+	buildCmd.Flags().String("docker-user", DockerUser, "docker registry username")
 	viper.SetDefault("docker_user", DockerUser)
-	buildCmd.Flags().StringVar(&DockerUser, "docker-user", DockerUser, "docker registry username")
+	viper.BindPFlag("docker_user", buildCmd.Flags().Lookup("docker-user"))
 
-	viper.SetDefault("docker_pass", DockerPassword)
 	buildCmd.Flags().StringVar(&DockerPassword, "docker-pass", DockerPassword, "docker registry password")
+	viper.SetDefault("docker_pass", DockerPassword)
+	viper.BindPFlag("docker_pass", buildCmd.Flags().Lookup("docker-pass"))
 
 }
 
@@ -350,24 +358,18 @@ func pushImage(mach_tag string) string {
 
 	tag := mach_tag
 
-	if Nopush || TestMode {
-		return "skipping push due to TestMode"
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*60)
 	defer cancel()
 
 	opts := types.ImagePushOptions{RegistryAuth: authConfigEncoded}
-	rd, err := cli.ImagePush(ctx, tag, opts)
-	if err != nil {
-		fmt.Println(err)
-	}
-	if rd == nil {
-		fmt.Println(rd)
-	}
 
 	termFd, isTerm := term.GetFdInfo(os.Stderr)
 
+	if Nopush || TestMode {
+		return "skipping push due to TestMode"
+	}
+
+	rd, err := cli.ImagePush(ctx, tag, opts)
 	err = jsonmessage.DisplayJSONMessagesStream(rd, os.Stderr, termFd, isTerm, nil)
 	if err != nil {
 		if !TestMode {
@@ -399,6 +401,7 @@ func dockerLog(msg string) string {
 				if !Verbose {
 					fmt.Print("\033[u\033[2K")
 				}
+
 				color.Blue(scanner.Text())
 			}
 
