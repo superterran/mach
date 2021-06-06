@@ -290,13 +290,11 @@ func buildImage(filename string) string {
 	}
 
 	if OutputOnly || TestMode {
-
 		generateDockerfileTemplate(os.Stdout, filename)
 		return mach_tag
-
 	}
 
-	fmt.Print("\033[s")
+	fmt.Print("\n" + "\033[s")
 
 	var DockerFilename string = filepath.Dir(filename) + "/." + filepath.Base(filename) + ".generated"
 
@@ -329,6 +327,7 @@ func buildImage(filename string) string {
 		if errLine.Error != "" {
 			log.Fatal(color.RedString(errLine.Error))
 		} else {
+			fmt.Print("\033[s")
 			dockerLog(scanner.Text())
 		}
 	}
@@ -385,6 +384,8 @@ func pushImage(mach_tag string) string {
 // it needs a bit of work.
 func dockerLog(msg string) string {
 
+	// fmt.Print("\033[s")
+
 	var result map[string]interface{}
 	json.Unmarshal([]byte(msg), &result)
 
@@ -393,13 +394,18 @@ func dockerLog(msg string) string {
 		switch msgtype := key; msgtype {
 
 		case "status":
-			color.Yellow(value.(string) + "\n\n")
+			scanner := bufio.NewScanner(strings.NewReader(value.(string)))
+			for scanner.Scan() {
+
+				fmt.Println("\033[u" + "\033[1A" + "\033[2K" + scanner.Text())
+				// color.Yellow(scanner.Text())
+			}
 			return value.(string)
 		case "stream":
 			scanner := bufio.NewScanner(strings.NewReader(value.(string)))
 			for scanner.Scan() {
 				if !Verbose {
-					fmt.Print("\033[u\033[2K")
+					fmt.Print("\033[u" + "\033[1A" + "\033[2K")
 				}
 
 				color.Blue(scanner.Text())
