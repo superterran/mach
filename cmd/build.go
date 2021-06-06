@@ -58,6 +58,9 @@ var DockerPassword = ""
 // Verbose removes the terminal formatting for builds, displaying the entire output to the user
 var Verbose bool = false
 
+// builds docker images without cache
+var NoCache bool = false
+
 type errorLine struct {
 	Error       string      `json:"error"`
 	errorDetail errorDetail `json:"errorDetail"`
@@ -88,6 +91,8 @@ func init() {
 
 	buildCmd.Flags().BoolP("no-push", "n", Nopush, "Do not push to registry")
 
+	buildCmd.Flags().BoolP("no-cache", "c", NoCache, "no build cache")
+
 	buildCmd.Flags().BoolP("output-only", "o", OutputOnly, "send output to stdout, do not build")
 
 	buildCmd.Flags().BoolP("first-only", "f", FirstOnly, "stop the build loop after the first image is found")
@@ -98,13 +103,17 @@ func init() {
 
 	viper.SetDefault("defaultGitBranch", DefaultGitBranch)
 
+	viper.SetDefault("docker_registry", DockerRegistry)
+	buildCmd.Flags().StringVar(&DockerRegistry, "docker-registry", DockerRegistry, "docker registry")
+
 	viper.SetDefault("docker_host", DockerHost)
+	buildCmd.Flags().StringVar(&DockerHost, "docker-host", DockerHost, "docker registry hostname")
 
 	viper.SetDefault("docker_user", DockerUser)
+	buildCmd.Flags().StringVar(&DockerUser, "docker-user", DockerUser, "docker registry username")
 
 	viper.SetDefault("docker_pass", DockerPassword)
-
-	viper.SetDefault("docker_registry", DockerRegistry)
+	buildCmd.Flags().StringVar(&DockerPassword, "docker-pass", DockerPassword, "docker registry password")
 
 }
 
@@ -294,6 +303,7 @@ func buildImage(filename string) string {
 		Dockerfile: filepath.Base(DockerFilename),
 		Remove:     true,
 		Tags:       []string{mach_tag},
+		NoCache:    NoCache,
 	}
 
 	ctx := context.Background()
