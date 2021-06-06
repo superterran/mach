@@ -129,13 +129,9 @@ func generateCompositionTemplate(filename string) {
 		wr, _ = os.Create(generateFilename)
 	}
 
-	tpl, err := template.ParseGlob(filename)
-	if err != nil {
-		panic(err)
-	}
+	tpl, _ := template.ParseGlob(filename)
 
 	tpl.ParseGlob(filepath.Dir(filename) + "/includes/*.tpl")
-	tpl.Execute(wr, filepath.Base(filename))
 
 	if !OutputOnly {
 		wr.Close()

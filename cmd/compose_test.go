@@ -70,13 +70,32 @@ func Test_ComposeMainFlow(t *testing.T) {
 	}
 }
 
-func Test_ComposeMainFlowExample(t *testing.T) {
+func Test_ComposeMainFlowExampleSingle(t *testing.T) {
 
 	ComposeDirname = "examples/stacks"
 
-	var actual = MainComposeFlow([]string{"example", "up"})
+	var actual = MainComposeFlow([]string{"simple", "up"})
 
 	if actual != nil {
 		assert.FailNowf(t, "returned not nil.", "Error msg: %v", actual)
 	}
+}
+
+func Test_ComposeMainFlowExampleAll(t *testing.T) {
+
+	ComposeDirname = "examples/stacks"
+
+	var actual = MainComposeFlow([]string{"up"})
+
+	if actual != nil {
+		assert.FailNowf(t, "returned not nil.", "Error msg: %v", actual)
+	}
+}
+
+func Test_ComposeGenerateTestFile(t *testing.T) {
+
+	ComposeDirname = "examples/stacks"
+
+	generateCompositionTemplate("../examples/stacks/template/docker-compose.yml.tpl")
+
 }
