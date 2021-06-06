@@ -49,7 +49,14 @@ var DockerHost string = "https://index.docker.io/v1/"
 // DockerRegistry is the package name inside the docker registry. @todo think through a better name
 var DockerRegistry = "superterran/mach"
 
-var bufferEmpty bool = true
+// DockerUser is the registry username
+var DockerUser = ""
+
+// DockerPassword is the registry password
+var DockerPassword = ""
+
+// Verbose removes the terminal formatting for builds, displaying the entire output to the user
+var Verbose bool = false
 
 type errorLine struct {
 	Error       string      `json:"error"`
@@ -85,11 +92,17 @@ func init() {
 
 	buildCmd.Flags().BoolP("first-only", "f", FirstOnly, "stop the build loop after the first image is found")
 
+	buildCmd.Flags().BoolP("verbose", "v", Verbose, "show entire build output")
+
 	viper.SetDefault("BuildImageDirname", BuildImageDirname)
 
 	viper.SetDefault("defaultGitBranch", DefaultGitBranch)
 
 	viper.SetDefault("docker_host", DockerHost)
+
+	viper.SetDefault("docker_user", DockerUser)
+
+	viper.SetDefault("docker_pass", DockerPassword)
 
 	viper.SetDefault("docker_registry", DockerRegistry)
 
@@ -110,6 +123,10 @@ func runBuild(cmd *cobra.Command, args []string) error {
 	BuildImageDirname = viper.GetString("BuildImageDirname")
 
 	DockerHost = viper.GetString("docker_host")
+
+	DockerUser = viper.GetString("docker_user")
+
+	DockerPassword = viper.GetString("docker_pass")
 
 	DockerRegistry = viper.GetString("docker_registry")
 
@@ -311,12 +328,12 @@ func buildImage(filename string) string {
 // if TestMode or Nopush are true.
 func pushImage(mach_tag string) string {
 
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	cli, _ := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 
 	var authConfig = types.AuthConfig{
-		Username:      viper.GetString("docker_user"),
-		Password:      viper.GetString("docker_pass"),
-		ServerAddress: viper.GetString("docker_host"),
+		Username:      DockerUser,
+		Password:      DockerPassword,
+		ServerAddress: DockerHost,
 	}
 	authConfigBytes, _ := json.Marshal(authConfig)
 	authConfigEncoded := base64.URLEncoding.EncodeToString(authConfigBytes)
@@ -327,7 +344,7 @@ func pushImage(mach_tag string) string {
 		return "skipping push due to TestMode"
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60*30)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*60)
 	defer cancel()
 
 	opts := types.ImagePushOptions{RegistryAuth: authConfigEncoded}
@@ -340,6 +357,7 @@ func pushImage(mach_tag string) string {
 	}
 
 	termFd, isTerm := term.GetFdInfo(os.Stderr)
+
 	jsonmessage.DisplayJSONMessagesStream(rd, os.Stderr, termFd, isTerm, nil)
 
 	defer rd.Close()
@@ -362,23 +380,15 @@ func dockerLog(msg string) string {
 			color.Yellow(value.(string) + "\n\n")
 			return value.(string)
 		case "stream":
-
-			// color.Blue(value.(string))
-
 			scanner := bufio.NewScanner(strings.NewReader(value.(string)))
 			for scanner.Scan() {
-
-				// fmt.Printf("\033[2K\r%d", i)
-
-				fmt.Print("\033[u\033[2K")
+				if !Verbose {
+					fmt.Print("\033[u\033[2K")
+				}
 				color.Blue(scanner.Text())
-				// // fmt.Println("\033[0K\r")
-				// fmt.Println("\r")
-
 			}
 
 			return value.(string)
-		case "aux":
 		case "errorDetail":
 			color.Red(value.(string))
 		default:
