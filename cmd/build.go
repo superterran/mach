@@ -49,8 +49,7 @@ var DockerHost string = "https://index.docker.io/v1/"
 // DockerRegistry is the package name inside the docker registry. @todo think through a better name
 var DockerRegistry = "superterran/mach"
 
-// lastOutput is a buffer for the last output generated, `buffer-empty` is just a placeholder
-var lastOutput string = "buffer-empty"
+var bufferEmpty bool = true
 
 type errorLine struct {
 	Error       string      `json:"error"`
@@ -263,6 +262,8 @@ func buildImage(filename string) string {
 
 	}
 
+	fmt.Print("\033[s")
+
 	var DockerFilename string = filepath.Dir(filename) + "/." + filepath.Base(filename) + ".generated"
 
 	f, _ := os.Create(DockerFilename)
@@ -331,17 +332,15 @@ func pushImage(mach_tag string) string {
 
 	opts := types.ImagePushOptions{RegistryAuth: authConfigEncoded}
 	rd, err := cli.ImagePush(ctx, tag, opts)
-
-	termFd, isTerm := term.GetFdInfo(os.Stderr)
-	jsonmessage.DisplayJSONMessagesStream(rd, os.Stderr, termFd, isTerm, nil)
-
 	if err != nil {
 		fmt.Println(err)
 	}
-
 	if rd == nil {
 		fmt.Println(rd)
 	}
+
+	termFd, isTerm := term.GetFdInfo(os.Stderr)
+	jsonmessage.DisplayJSONMessagesStream(rd, os.Stderr, termFd, isTerm, nil)
 
 	defer rd.Close()
 
@@ -360,13 +359,28 @@ func dockerLog(msg string) string {
 		switch msgtype := key; msgtype {
 
 		case "status":
-			color.Yellow(value.(string))
+			color.Yellow(value.(string) + "\n\n")
 			return value.(string)
 		case "stream":
-			color.Blue(value.(string))
+
+			// color.Blue(value.(string))
+
+			scanner := bufio.NewScanner(strings.NewReader(value.(string)))
+			for scanner.Scan() {
+
+				// fmt.Printf("\033[2K\r%d", i)
+
+				fmt.Print("\033[u\033[2K")
+				color.Blue(scanner.Text())
+				// // fmt.Println("\033[0K\r")
+				// fmt.Println("\r")
+
+			}
+
 			return value.(string)
 		case "aux":
 		case "errorDetail":
+			color.Red(value.(string))
 		default:
 
 		}

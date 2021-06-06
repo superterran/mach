@@ -1,3 +1,3 @@
-FROM alpine:latest
+FROM ubuntu:latest
 
 {{ template "test.tpl"}}

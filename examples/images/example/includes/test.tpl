@@ -1,1 +1,1 @@
-RUN  echo "doug wuz here!"
+RUN  apt-get update && apt-get upgrade
