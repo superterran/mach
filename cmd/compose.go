@@ -133,6 +133,8 @@ func generateCompositionTemplate(filename string) {
 
 	tpl.ParseGlob(filepath.Dir(filename) + "/includes/*.tpl")
 
+	tpl.Execute(wr, viper.AllSettings())
+
 	if !OutputOnly {
 		wr.Close()
 	}

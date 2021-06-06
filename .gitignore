@@ -23,3 +23,5 @@ coverage.txt
 coverage
 examples/*/docker-machine.yml
 .envrc
+
+examples/**/docker-compose.yml
