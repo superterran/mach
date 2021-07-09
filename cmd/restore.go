@@ -177,6 +177,10 @@ func populateMachineDir(machine string) bool {
 	replaceInMachineFile(config, homedir, "${TEMPLATE_HOME_DIR}")
 	replaceInMachineFile(config, machine, "${TEMPLATE_MACHINE_NAME}")
 
+	// makes compatible with bash script
+	replaceInMachineFile(config, homedir, "___HOME_DIR___")
+	replaceInMachineFile(config, machine, "___MACHINE_NAME___")
+
 	return true
 
 }
