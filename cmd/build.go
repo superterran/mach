@@ -61,6 +61,9 @@ var Verbose bool = false
 // builds docker images without cache
 var NoCache bool = false
 
+// add build tag
+var BuildVariantFromParam string = ""
+
 type errorLine struct {
 	Error       string      `json:"error"`
 	errorDetail errorDetail `json:"errorDetail"`
@@ -123,6 +126,10 @@ func init() {
 	viper.SetDefault("docker_pass", DockerPassword)
 	viper.BindPFlag("docker_pass", buildCmd.Flags().Lookup("docker-pass"))
 
+	buildCmd.Flags().StringVar(&BuildVariantFromParam, "variant", BuildVariantFromParam, "variant tag")
+	viper.SetDefault("variant", BuildVariantFromParam)
+	viper.BindPFlag("variant", buildCmd.Flags().Lookup("variant"))
+
 }
 
 // runBuild is the main flow for the build command. If no arguments are present, it will each through
@@ -146,6 +153,8 @@ func runBuild(cmd *cobra.Command, args []string) error {
 	DockerPassword = viper.GetString("docker_pass")
 
 	DockerRegistry = viper.GetString("docker_registry")
+
+	BuildVariantFromParam = viper.GetString("variant")
 
 	return MainBuildFlow(args)
 }
@@ -274,6 +283,10 @@ func getBranchVariant() string {
 		if variant_branch != DefaultGitBranch {
 			variant = "-" + variant_branch
 		}
+	}
+
+	if BuildVariantFromParam != "" {
+		return "-" + BuildVariantFromParam
 	}
 
 	return variant
