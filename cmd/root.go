@@ -34,8 +34,9 @@ var rootCmd = CreateRootCmd()
 
 func CreateRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "mach",
-		Short: "Tool for mocking out environments with docker",
+		Use:              "mach",
+		TraverseChildren: true,
+		Short:            "Tool for mocking out environments with docker",
 		Long: `A tool for provisioning and running docker compositions both locally and in the cloud.
 		
 		usage: mach build php:8.1`,
