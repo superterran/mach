@@ -119,11 +119,11 @@ func init() {
 	viper.BindPFlag("docker_host", buildCmd.Flags().Lookup("docker-host"))
 
 	buildCmd.Flags().String("docker-user", DockerUser, "docker registry username")
-	viper.SetDefault("docker_user", DockerUser)
+	// viper.SetDefault("docker_user", DockerUser)
 	viper.BindPFlag("docker_user", buildCmd.Flags().Lookup("docker-user"))
 
 	buildCmd.Flags().StringVar(&DockerPassword, "docker-pass", DockerPassword, "docker registry password")
-	viper.SetDefault("docker_pass", DockerPassword)
+	// viper.SetDefault("docker_pass", DockerPassword)
 	viper.BindPFlag("docker_pass", buildCmd.Flags().Lookup("docker-pass"))
 
 	buildCmd.Flags().StringVar(&BuildVariantFromParam, "variant", BuildVariantFromParam, "variant tag")
