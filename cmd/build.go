@@ -140,6 +140,8 @@ func runBuild(cmd *cobra.Command, args []string) error {
 
 	Nopush, _ = cmd.Flags().GetBool("no-push")
 
+	NoCache, _ = cmd.Flags().GetBool("no-cache")
+
 	OutputOnly, _ = cmd.Flags().GetBool("output-only")
 
 	FirstOnly, _ = cmd.Flags().GetBool("first-only")
