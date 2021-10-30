@@ -256,9 +256,9 @@ func getTag(filename string) string {
 	var tag string
 
 	if "-"+apiVersion == variant+"-" {
-		tag = getApiVersion(filename) + filepath.Base(filepath.Dir(filename))
+		tag = apiVersion + filepath.Base(filepath.Dir(filename))
 	} else {
-		tag = getApiVersion(filename) + filepath.Base(filepath.Dir(filename)) + getVariant(filename)
+		tag = apiVersion + filepath.Base(filepath.Dir(filename)) + variant
 	}
 
 	if DockerRegistry != "" {
@@ -281,8 +281,13 @@ func getVariant(filename string) string {
 		variant = "-" + strings.Split(filepath.Base(filename), "-")[1]
 	}
 
-	return strings.Replace(variant, ".tpl", "", 1) + getBranchVariant()
+	variant = strings.Replace(variant, ".tpl", "", 1)
 
+	if getBranchVariant()+"-" == "-"+getApiVersion(filename) {
+		return variant
+	} else {
+		return variant + getBranchVariant()
+	}
 }
 
 // getBranchVariant will return a string that can appended to the variant of a tag, this function is called
