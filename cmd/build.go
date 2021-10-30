@@ -255,7 +255,7 @@ func getTag(filename string) string {
 
 	var tag string
 
-	if apiVersion == variant {
+	if "-"+apiVersion == variant+"-" {
 		tag = getApiVersion(filename) + filepath.Base(filepath.Dir(filename))
 	} else {
 		tag = getApiVersion(filename) + filepath.Base(filepath.Dir(filename)) + getVariant(filename)
