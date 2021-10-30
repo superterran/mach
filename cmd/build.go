@@ -233,7 +233,13 @@ func getApiVersion(filename string) string {
 
 	content, err := ioutil.ReadFile(filepath.Dir(filename) + "/API_VERSION")
 	if err != nil {
-		return ""
+		content, err := ioutil.ReadFile(filepath.Dir(filename) + "/../API_VERSION")
+		if err != nil {
+
+			return ""
+		} else {
+			return string(content) + "-"
+		}
 	} else {
 		return string(content) + "-"
 	}
@@ -244,7 +250,16 @@ func getApiVersion(filename string) string {
 // using a variant in the filename (detailed below) or by using a git branch other than the default
 func getTag(filename string) string {
 
-	var tag string = getApiVersion(filename) + filepath.Base(filepath.Dir(filename)) + getVariant(filename)
+	var apiVersion = getApiVersion(filename)
+	var variant = getVariant(filename)
+
+	var tag string
+
+	if apiVersion == variant {
+		tag = getApiVersion(filename) + filepath.Base(filepath.Dir(filename))
+	} else {
+		tag = getApiVersion(filename) + filepath.Base(filepath.Dir(filename)) + getVariant(filename)
+	}
 
 	if DockerRegistry != "" {
 		return DockerRegistry + ":" + tag
