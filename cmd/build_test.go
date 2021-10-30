@@ -184,7 +184,7 @@ func Test_buildCmdOneArgWithImagesOutputOnlyWithTagReal(t *testing.T) {
 
 	var actual = buildImage("../examples/images/example/Dockerfile")
 
-	if actual != "superterran/mach:example" {
+	if actual != "superterran/mach:v1-example" {
 		assert.FailNowf(t, "mach tag returned as expected, %s", actual)
 	}
 }
@@ -196,7 +196,7 @@ func Test_buildCmdOneArgWithImagesOutputOnlyWithTagRealTemplate(t *testing.T) {
 
 	var actual = buildImage("../examples/images/example/Dockerfile-template.tpl")
 
-	if actual != "superterran/mach:example-template" {
+	if actual != "superterran/mach:v1-example-template" {
 		assert.FailNowf(t, "mach tag returned as expected, %s", actual)
 	}
 }
@@ -208,7 +208,7 @@ func Test_buildCmdOneArgWithImagesOutputOnlyWithTagRealOutputOnly(t *testing.T) 
 
 	var actual = buildImage("../examples/images/example/Dockerfile")
 
-	if actual != "superterran/mach:example" {
+	if actual != "superterran/mach:v1-example" {
 		assert.FailNowf(t, "mach tag returned as expected, %s", actual)
 	}
 }
@@ -220,7 +220,7 @@ func Test_buildCmdOneArgWithImagesOutputOnlyWithTagRealTemplateOutputOnly(t *tes
 
 	var actual = buildImage("../examples/images/example/Dockerfile-template.tpl")
 
-	if actual != "superterran/mach:example-template" {
+	if actual != "superterran/mach:v1-example-template" {
 		assert.FailNowf(t, "mach tag returned as expected, %s", actual)
 	}
 }

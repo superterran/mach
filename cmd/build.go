@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -228,12 +229,22 @@ func generateDockerfileTemplate(wr io.Writer, filename string) {
 
 }
 
+func getApiVersion(filename string) string {
+
+	content, err := ioutil.ReadFile(filepath.Dir(filename) + "/API_VERSION")
+	if err != nil {
+		return ""
+	} else {
+		return string(content) + "-"
+	}
+}
+
 // getTag determines the string used for the docker image tag that gets referenced in the registry.
 // This is typically just the directory name the dockerfile resides in, but can be modified by either
 // using a variant in the filename (detailed below) or by using a git branch other than the default
 func getTag(filename string) string {
 
-	var tag string = filepath.Base(filepath.Dir(filename)) + getVariant(filename)
+	var tag string = getApiVersion(filename) + filepath.Base(filepath.Dir(filename)) + getVariant(filename)
 
 	if DockerRegistry != "" {
 		return DockerRegistry + ":" + tag
