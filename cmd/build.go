@@ -351,11 +351,23 @@ func buildImage(filename string) string {
 
 	tar, _ := archive.TarWithOptions(filepath.Dir(DockerFilename), &archive.TarOptions{})
 
+	var authConfig = types.AuthConfig{
+		Username:      DockerUser,
+		Password:      DockerPassword,
+		ServerAddress: DockerHost,
+	}
+	authConfigBytes, _ := json.Marshal(authConfig)
+
 	opts := types.ImageBuildOptions{
 		Dockerfile: filepath.Base(DockerFilename),
 		Remove:     true,
 		Tags:       []string{mach_tag},
 		NoCache:    NoCache,
+		AuthConfigs: map[string]types.AuthConfig{
+			"https://index.docker.io/v1/": {
+				Auth: base64.URLEncoding.EncodeToString(authConfigBytes),
+			},
+		},
 	}
 
 	ctx := context.Background()
@@ -364,6 +376,7 @@ func buildImage(filename string) string {
 	res, _ := cli.ImageBuild(ctx, tar, opts)
 
 	scanner := bufio.NewScanner(res.Body)
+
 	for scanner.Scan() {
 
 		var lastLine = scanner.Text()
@@ -376,6 +389,8 @@ func buildImage(filename string) string {
 			fmt.Print("\033[s")
 			dockerLog(scanner.Text())
 		}
+
+		//	os.Exit(1)
 	}
 
 	e := os.Remove(DockerFilename)
@@ -415,6 +430,7 @@ func pushImage(mach_tag string) string {
 	}
 
 	rd, err := cli.ImagePush(ctx, tag, opts)
+
 	err = jsonmessage.DisplayJSONMessagesStream(rd, os.Stderr, termFd, isTerm, nil)
 	if err != nil {
 		if !TestMode {

@@ -1,1 +1,1 @@
-FROM alpine:latest
+FROM blueacornici/magento-services:v2-pipelines-7.4composer214
